@@ -5,6 +5,7 @@
  */
 package geoalgovis.symbolplacement;
 
+import geoalgovis.algorithms.GravitationalAlgorithm;
 import geoalgovis.problem.ProblemDefinition;
 import geoalgovis.algorithms.LineupAlgorithm;
 
@@ -27,7 +28,8 @@ public class SymbolPlacement extends ProblemDefinition<Input,Output,SymbolPlacem
     @Override
     public SymbolPlacementAlgorithm[] getAlgorithms() {
         return new SymbolPlacementAlgorithm[]{
-            new LineupAlgorithm()
+            new LineupAlgorithm(),
+            new GravitationalAlgorithm()
         };
     }
     
