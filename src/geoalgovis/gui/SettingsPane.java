@@ -5,6 +5,7 @@
  */
 package geoalgovis.gui;
 
+import geoalgovis.Settings;
 import geoalgovis.problem.Problem;
 import geoalgovis.problem.Solution;
 

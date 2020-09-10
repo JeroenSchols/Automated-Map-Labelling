@@ -3,7 +3,6 @@ package geoalgovis.gui;
 import geoalgovis.problem.Algorithm;
 import geoalgovis.problem.Solution;
 import geoalgovis.problem.Problem;
-import geoalgovis.networking.Receiver;
 import geoalgovis.networking.Sender;
 
 import java.awt.event.ActionEvent;
@@ -28,7 +27,6 @@ public class AdvancedPane extends JPanel {
      * To change this template file, choose Tools | Templates
      * and open the template in the editor.
      */
-
     JDialog frame;
     MainPane mainPane;
     JFileChooser exportPicker;
@@ -45,11 +43,11 @@ public class AdvancedPane extends JPanel {
 
         initComponents();
 
-        if(checkerThread != null && checkerThread.isAlive()){
+        if (checkerThread != null && checkerThread.isAlive()) {
             batchChecker.setText("Abort");
         }
 
-        if(SettingsPane.getExportPath() != null) {
+        if (SettingsPane.getExportPath() != null) {
             String path = SettingsPane.getExportPath().getAbsolutePath();
             if (path.length() > 30) {
                 path = path.substring(0, 8) + "...." + path.substring(path.length() - 15, path.length());
@@ -59,14 +57,13 @@ public class AdvancedPane extends JPanel {
 
         autoExportSolutions.setSelected(SettingsPane.isAutoExportSolutions());
 
-
         exportPicker = new JFileChooser();
-        exportPicker.setFileFilter( new FolderFilter() );
+        exportPicker.setFileFilter(new FolderFilter());
         exportPicker.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-        if(SettingsPane.getExportPath() != null && SettingsPane.getExportPath().exists()){
+        if (SettingsPane.getExportPath() != null && SettingsPane.getExportPath().exists()) {
             exportPicker.setCurrentDirectory(SettingsPane.getExportPath());
-        }else{
+        } else {
             autoExportSolutions.setEnabled(false);
             SettingsPane.setAutoExportSolutions(false);
         }
@@ -98,7 +95,6 @@ public class AdvancedPane extends JPanel {
         jLabel7 = new javax.swing.JLabel();
         contestUrlField = new javax.swing.JTextField();
         joinContest = new javax.swing.JButton();
-        createContest = new javax.swing.JButton();
         jSeparator2 = new javax.swing.JSeparator();
         cancelButton = new javax.swing.JButton();
         okButton = new javax.swing.JButton();
@@ -106,7 +102,6 @@ public class AdvancedPane extends JPanel {
         sendAllSolutionsBtn = new javax.swing.JButton();
 
         jLabel1.setText("Problem type");
-
 
         batchSolver.setText("Batch Solver");
         batchSolver.setPreferredSize(new java.awt.Dimension(200, 23));
@@ -164,10 +159,10 @@ public class AdvancedPane extends JPanel {
 
         contestUrlField.setText(Sender.getConnectionString());
 
-        if(!Sender.isJoinedContest()) {
+        if (!Sender.isJoinedContest()) {
             joinContest.setText("Join contest");
             sendAllSolutionsBtn.setEnabled(false);
-        }else{
+        } else {
             joinContest.setEnabled(true);
             joinContest.setText("Leave contest");
         }
@@ -177,24 +172,12 @@ public class AdvancedPane extends JPanel {
             }
         });
 
-        if(!Receiver.contestStarted()) {
-            createContest.setText("Create contest");
-        }else{
-            createContest.setText("Stop contest");
-        }
-        createContest.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createContestActionPerformed(evt);
-            }
-        });
-
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
             }
         });
-
 
         okButton.setText("Ok");
         okButton.addActionListener(new java.awt.event.ActionListener() {
@@ -251,10 +234,7 @@ public class AdvancedPane extends JPanel {
                                                         .addComponent(teamNameField)
                                                         .addComponent(sharedSecretField)
                                                         .addComponent(contestUrlField)))
-                                        .addGroup(layout.createSequentialGroup()
-                                                .addComponent(joinContest, javax.swing.GroupLayout.PREFERRED_SIZE, 194, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(createContest, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addComponent(joinContest, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                         .addGroup(layout.createSequentialGroup()
                                                 .addComponent(cancelButton, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)
                                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -296,10 +276,8 @@ public class AdvancedPane extends JPanel {
                                         .addComponent(jLabel7)
                                         .addComponent(contestUrlField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                        .addComponent(joinContest)
-                                        .addComponent(createContest))
-                                .addGap(4, 4, 4)
+                                .addComponent(joinContest)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(sendAllSolutionsBtn)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -311,17 +289,17 @@ public class AdvancedPane extends JPanel {
         );
     }// </editor-fold>
 
-    private void autoExportSolutionsChanged(java.awt.event.ActionEvent evt){
+    private void autoExportSolutionsChanged(java.awt.event.ActionEvent evt) {
         SettingsPane.setAutoExportSolutions(autoExportSolutions.isSelected());
     }
 
     private void batchCheckerActionPerformed(java.awt.event.ActionEvent evt) {
-        if(batchChecker.getText().equals("Abort")){
-            if(checkerThread != null && checkerThread.isAlive()){
+        if (batchChecker.getText().equals("Abort")) {
+            if (checkerThread != null && checkerThread.isAlive()) {
                 checkerThread.interrupt();
             }
             batchChecker.setText("Batch Checker");
-        }else {
+        } else {
             if (SettingsPane.getExportPath() != null) {
                 exportPicker.setCurrentDirectory(SettingsPane.getExportPath());
             }
@@ -347,17 +325,17 @@ public class AdvancedPane extends JPanel {
     }
 
     private void batchSolverActionPerformed(java.awt.event.ActionEvent evt) {
-        if(mainPane.getProblemsPanel().getProblems().size() == 0){
+        if (mainPane.getProblemsPanel().getProblems().size() == 0) {
             JOptionPane.showMessageDialog(this,
                     "Please first load a problem set before solving them.");
             return;
         }
-        if(SettingsPane.getExportPath() == null){
+        if (SettingsPane.getExportPath() == null) {
             JOptionPane.showMessageDialog(this,
                     "Please first select a location to store the solutions.");
             return;
         }
-        if(!SettingsPane.isAutoExportSolutions()){
+        if (!SettingsPane.isAutoExportSolutions()) {
             JOptionPane.showMessageDialog(this,
                     "Please note that by solving the solutions auto export will be turned on.");
         }
@@ -370,19 +348,19 @@ public class AdvancedPane extends JPanel {
 
                 String[] appliedAlgos = e.getActionCommand().split(",");
                 ArrayList<Algorithm> algoObjects = new ArrayList<>();
-                for(Algorithm a : mainPane.getAlgorithmsPanel().getAlgorithmObjects()){
-                    for(String name : appliedAlgos) {
-                        if(a.getClass().getSimpleName().equals(name)){
+                for (Algorithm a : mainPane.getAlgorithmsPanel().getAlgorithmObjects()) {
+                    for (String name : appliedAlgos) {
+                        if (a.getClass().getSimpleName().equals(name)) {
                             algoObjects.add(a);
                         }
                     }
                 }
                 LinkedBlockingQueue<Runnable> q = new LinkedBlockingQueue<>();
-                ThreadPoolExecutor ex = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors()+1,
-                        Runtime.getRuntime().availableProcessors()+1, 1000, TimeUnit.MILLISECONDS, q );
+                ThreadPoolExecutor ex = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() + 1,
+                        Runtime.getRuntime().availableProcessors() + 1, 1000, TimeUnit.MILLISECONDS, q);
                 ex.prestartAllCoreThreads();
-                for(Problem p : mainPane.getProblemsPanel().getProblems()){
-                    for(Algorithm a : algoObjects){
+                for (Problem p : mainPane.getProblemsPanel().getProblems()) {
+                    for (Algorithm a : algoObjects) {
                         q.add(new Runnable() {
                             @Override
                             public void run() {
@@ -408,7 +386,7 @@ public class AdvancedPane extends JPanel {
                 ex.shutdown();
                 try {
                     ex.awaitTermination(10, TimeUnit.DAYS);
-                }catch (InterruptedException e1){
+                } catch (InterruptedException e1) {
                     ex.shutdownNow();
                 }
                 mainPane.getAlgorithmsPanel().syncViews();
@@ -419,36 +397,26 @@ public class AdvancedPane extends JPanel {
     }
 
     private void outputDirectoryActionPerformed(java.awt.event.ActionEvent evt) {
-        if(SettingsPane.getExportPath() != null){
+        if (SettingsPane.getExportPath() != null) {
             exportPicker.setCurrentDirectory(SettingsPane.getExportPath());
         }
         int returnVal = exportPicker.showOpenDialog(this);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            if(exportPicker.getSelectedFile().isDirectory()) {
+            if (exportPicker.getSelectedFile().isDirectory()) {
                 SettingsPane.setExportPath(exportPicker.getSelectedFile());
                 autoExportSolutions.setEnabled(true);
                 String path = SettingsPane.getExportPath().getAbsolutePath();
-                if(path.length() > 30){
-                    path = path.substring(0,8) + "...." + path.substring(path.length()-15, path.length());
+                if (path.length() > 30) {
+                    path = path.substring(0, 8) + "...." + path.substring(path.length() - 15, path.length());
                 }
                 outputDirectoryLabel.setText(path);
             }
         }
     }
 
-    private void createContestActionPerformed(java.awt.event.ActionEvent evt) {
-        if(!Receiver.contestStarted()) {
-            Receiver.startContest(2346,-1);
-            createContest.setText("Stop contest");
-        }else{
-            Receiver.close();
-            createContest.setText("Create contest");
-        }
-    }
-
     private void joinContestActionPerformed(java.awt.event.ActionEvent evt) {
-        if(!Sender.isJoinedContest()) {
+        if (!Sender.isJoinedContest()) {
             Sender.setTeamName(teamNameField.getText());
             Sender.setSharedSecret(sharedSecretField.getText());
             Sender.setConnectionString(contestUrlField.getText());
@@ -456,23 +424,23 @@ public class AdvancedPane extends JPanel {
             sendAllSolutionsBtn.setEnabled(true);
             if (result == null) {
                 joinContest.setText("Leave contest");
-            }else{
+            } else {
                 JOptionPane.showMessageDialog(mainPane, result);
             }
-        }else{
+        } else {
             Sender.leaveContest();
             sendAllSolutionsBtn.setEnabled(false);
             joinContest.setText("Join contest");
         }
     }
 
-    private void readAllSolutionsBtnActionPerformed(java.awt.event.ActionEvent evt){
-        if(readAllSolutionsBtn.getText().equals("Abort")){
-            if(readerThread != null && readerThread.isAlive()){
+    private void readAllSolutionsBtnActionPerformed(java.awt.event.ActionEvent evt) {
+        if (readAllSolutionsBtn.getText().equals("Abort")) {
+            if (readerThread != null && readerThread.isAlive()) {
                 readerThread.interrupt();
             }
             readAllSolutionsBtn.setText("Read all solutions");
-        }else {
+        } else {
             if (SettingsPane.getExportPath() != null && SettingsPane.getExportPath().isDirectory()) {
                 readAllSolutionsBtn.setText("Abort");
                 Runnable r = new Runnable() {
@@ -486,20 +454,20 @@ public class AdvancedPane extends JPanel {
                 readerThread = new Thread(r);
                 readerThread.start();
 
-            }else{
+            } else {
                 System.err.println("This method can only be called when there is an export path");
             }
 
         }
     }
 
-    private void sendAllSolutionsBtnActionPerformed(java.awt.event.ActionEvent evt){
+    private void sendAllSolutionsBtnActionPerformed(java.awt.event.ActionEvent evt) {
         Collection<Problem> problems = ProblemsPane.getProblems();
-        for(Problem p : problems){
+        for (Problem p : problems) {
             Collection<Solution> solutions = p.getAllSolutions();
-            for(Solution s : solutions){
+            for (Solution s : solutions) {
                 System.out.println("Sending Solution " + s.getName() + " for problem " + p.instanceName());
-                Sender.sendSolution(p,s);
+                Sender.sendSolution(p, s);
             }
         }
         System.out.println("Done sending solutions");
@@ -510,7 +478,7 @@ public class AdvancedPane extends JPanel {
     }
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {
-        
+
         Sender.setTeamName(teamNameField.getText());
         Sender.setSharedSecret(sharedSecretField.getText());
         Sender.setConnectionString(contestUrlField.getText());
@@ -518,36 +486,35 @@ public class AdvancedPane extends JPanel {
         frame.dispose();
     }
 
-
-    private void batchChecker(File directory){
+    private void batchChecker(File directory) {
         System.out.println("Checking " + directory.getAbsolutePath());
         File[] files = directory.listFiles();
         ArrayList<String> names = new ArrayList<>();
         ArrayList<String> problemName = new ArrayList<>();
         ArrayList<Double> score = new ArrayList<>();
         ArrayList<String> ruling = new ArrayList<>();
-        for(File file: files){
-            if(Thread.interrupted()){
+        for (File file : files) {
+            if (Thread.interrupted()) {
                 return;
             }
-            if(file.isDirectory()){
+            if (file.isDirectory()) {
                 batchChecker(file);
-            }else{
+            } else {
                 String name = file.getName().split("\\W")[0];
-                if(mainPane.getProblemsPanel().getProblem(name) != null){
+                if (mainPane.getProblemsPanel().getProblem(name) != null) {
                     Problem p = mainPane.getProblemsPanel().getProblem(name);
                     Solution s = p.loadSolution("batchCheck", file);
-                    if(s == null){
+                    if (s == null) {
                         names.add(file.getName());
                         problemName.add(p.instanceName());
                         score.add(-1.0);
                         ruling.add("Unable to read");
-                    }else{
+                    } else {
                         names.add(file.getName());
                         problemName.add(p.instanceName());
-                        if(s.isValid()){
+                        if (s.isValid()) {
                             ruling.add("Valid");
-                        }else{
+                        } else {
                             ruling.add("Invalid");
                         }
                         score.add(s.computeQuality());
@@ -559,30 +526,28 @@ public class AdvancedPane extends JPanel {
         }
         System.out.println("Writing CSV");
         String csvOutput = "Filename;Matched Problem;Ruling;Score\r\n";
-        for(int i = 0; i<names.size();i++){
-            csvOutput += names.get(i)+";"+problemName.get(i)+";"+ruling.get(i)+";"+score.get(i)+"\r\n";
+        for (int i = 0; i < names.size(); i++) {
+            csvOutput += names.get(i) + ";" + problemName.get(i) + ";" + ruling.get(i) + ";" + score.get(i) + "\r\n";
         }
-        File file = new File(directory.getAbsolutePath() + File.separator + "results.csv" );
-        if(file.exists()){
+        File file = new File(directory.getAbsolutePath() + File.separator + "results.csv");
+        if (file.exists()) {
             file.delete();
         }
-        try{
+        try {
             file.createNewFile();
-            try(FileOutputStream stream = new FileOutputStream(file)) {
+            try (FileOutputStream stream = new FileOutputStream(file)) {
                 stream.write(csvOutput.getBytes());
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("CSV written");
     }
 
-
     // Variables declaration - do not modify
     private javax.swing.JButton batchChecker;
     private javax.swing.JButton batchSolver;
     private javax.swing.JTextField contestUrlField;
-    private javax.swing.JButton createContest;
     private javax.swing.JButton cancelButton;
     private javax.swing.JButton okButton;
     private javax.swing.JLabel jLabel1;
@@ -603,10 +568,10 @@ public class AdvancedPane extends JPanel {
     private javax.swing.JButton sendAllSolutionsBtn;
     // End of variables declaration
 
-
     private static class FolderFilter extends javax.swing.filechooser.FileFilter {
+
         @Override
-        public boolean accept( File file ) {
+        public boolean accept(File file) {
             return file.isDirectory();
         }
 

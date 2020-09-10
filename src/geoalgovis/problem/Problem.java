@@ -73,6 +73,9 @@ public abstract class Problem<TOutput extends Solution> implements Viewable {
         }
         return s;
     }
+    public TOutput loadSolution(File file) {
+        return loadSolution(fileToString(file));
+    }
 
     public abstract TOutput loadSolution(String solution);
 
@@ -127,7 +130,7 @@ public abstract class Problem<TOutput extends Solution> implements Viewable {
         }
     }
 
-    private String fileToString(File f) {
+    private static String fileToString(File f) {
         StringBuilder contentBuilder = new StringBuilder();
 
         try (Stream<String> stream = Files.lines(f.toPath(), StandardCharsets.UTF_8)) {

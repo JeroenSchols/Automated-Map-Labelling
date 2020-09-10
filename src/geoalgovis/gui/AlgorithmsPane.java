@@ -1,5 +1,6 @@
 package geoalgovis.gui;
 
+import geoalgovis.Settings;
 import geoalgovis.problem.Algorithm;
 import geoalgovis.problem.Solution;
 import geoalgovis.problem.Problem;

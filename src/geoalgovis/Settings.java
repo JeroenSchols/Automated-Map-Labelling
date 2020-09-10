@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package geoalgovis.gui;
+package geoalgovis;
 
 import geoalgovis.problem.ProblemDefinition;
 import geoalgovis.symbolplacement.SymbolPlacement;

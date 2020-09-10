@@ -29,6 +29,16 @@ public class IPEParser {
     public static void main(String[] args) throws IOException {
 
         IPEReader read = IPEReader.clipboardReader();
+        Input input = parseIPE(read);
+        read.close();
+        System.out.println("Found "+input.regions.size()+" regions");
+        System.out.println("Copy everything below the line as a template for an input file");
+        System.out.println("--------------------------------------------------------------");
+        System.out.println(input.writeProblem());
+
+    }
+    
+    public static Input parseIPE(IPEReader read) throws IOException {
         List<ReadItem> items = read.read();
         Input input = new Input();
         input.regions = new ArrayList();
@@ -107,10 +117,6 @@ public class IPEParser {
                     break;
             }
         }
-        System.out.println("Found "+input.regions.size()+" regions");
-        System.out.println("Copy everything below the line as a template for an input file");
-        System.out.println("--------------------------------------------------------------");
-        System.out.println(input.writeProblem());
-
-    }
+        return input;
+    } 
 }

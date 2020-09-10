@@ -1,5 +1,6 @@
 package geoalgovis.gui;
 
+import geoalgovis.Settings;
 import geoalgovis.problem.Problem;
 
 import javax.swing.*;
@@ -130,17 +131,18 @@ public class ProblemsPane extends JPanel {
             editTimes = new ArrayList<>();
             visualizations = new ArrayList<>();
             problemSet = new HashMap<>();
+
+            System.out.println("Loading problems...");
             int i = 0;
             for (File file : allFiles) {
                 if (!file.isDirectory()) {
-                    i++;
-                    System.out.println("Loading " + i);
                     addNewProblem(file);
+                    i++;
                 }
             }
             reloadGraphics();
+            System.out.println("Loaded " + i + " problems");
         }
-        System.out.println("Loaded");
     }
 
     public void checkProblems() {

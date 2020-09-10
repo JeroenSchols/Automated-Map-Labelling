@@ -54,8 +54,7 @@ public class Output extends Solution {
             }
             for (int j = i + 1; j < symbols.size(); j++) {
                 Symbol ss = symbols.get(j);
-                if (ss.getCenter().squaredDistanceTo(s.getCenter())
-                        < s.getRadius() + ss.getRadius() - DoubleUtil.EPS) {
+                if (ss.getCenter().distanceTo(s.getCenter()) < s.getRadius() + ss.getRadius() - DoubleUtil.EPS) {
                     return false;
                 }
             }

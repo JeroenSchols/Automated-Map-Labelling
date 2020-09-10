@@ -5,12 +5,10 @@
  */
 package geoalgovis;
 
-import geoalgovis.gui.ProblemsPane;
-import geoalgovis.gui.Settings;
-import geoalgovis.gui.SettingsPane;
 import geoalgovis.networking.Receiver;
-import geoalgovis.networking.SolutionLibrary;
+import geoalgovis.networking.ContestManager;
 import java.io.File;
+import java.io.IOException;
 
 /**
  *
@@ -18,28 +16,31 @@ import java.io.File;
  */
 public class Server {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
+
+        Settings.init("serversettings.txt");
 
         //read config
         int contestPort = Settings.getInt("contestPort", 2345);
-        int httpPort = Settings.getInt("httpPort", -1);
         File problemDirectory = new File(Settings.getValue("problemDirectory", "problems"));
         File outputDirectory = new File(Settings.getValue("outputDirectory", "output"));
         String jsonLocation = Settings.getValue("jsonLocation", null);
         long jsonDelay = Settings.getInt("jsonDelay", 1000);
+        int threads = Settings.getInt("threads", 20);
+        String context = Settings.getValue("context","/");
 
         System.out.println("-------------- Final settings ----------------");
         System.out.println("Working with settings: ");
         System.out.println("\tcontestPort = " + contestPort);
-        System.out.println("\thttpPort = " + httpPort);
         System.out.println("\tproblemDirectory = " + problemDirectory.getAbsolutePath());
         System.out.println("\toutputDirectory = " + outputDirectory.getAbsolutePath());
         System.out.println("\tjsonLocation = " + (jsonLocation == null ? "null" : jsonLocation));
         System.out.println("\tjsonDelay = " + jsonDelay);
+        System.out.println("\tthreads = " + threads);
+        System.out.println("\tcontext = " + context);
         System.out.println("------------ End Final settings --------------");
 
-        SolutionLibrary.delay = jsonDelay;
-        SolutionLibrary.jsonLocation = jsonLocation;
+        ContestManager cm = new ContestManager(jsonLocation, jsonDelay);
 
         if (!problemDirectory.exists()) {
             problemDirectory.mkdirs();
@@ -48,11 +49,10 @@ public class Server {
             outputDirectory.mkdirs();
         }
 
-        //load problems
-        SettingsPane.setExportPath(outputDirectory);
-        ProblemsPane pane = new ProblemsPane(null, problemDirectory);
+        cm.initialize();
 
-        Receiver.startContest(contestPort, httpPort);
+        Receiver.cm = cm;
+        Receiver.startContest();
 
         System.out.println("Contest started");
     }
