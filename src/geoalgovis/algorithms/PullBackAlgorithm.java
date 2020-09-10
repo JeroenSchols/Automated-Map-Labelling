@@ -5,7 +5,6 @@ import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 import nl.tue.geometrycore.geometry.linear.*;
-import sun.text.normalizer.SymbolTable;
 
 import java.util.*;
 
@@ -15,20 +14,31 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
         LineupAlgorithm la = new LineupAlgorithm();
         Output output = la.doAlgorithm(input);
+        output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
 
-        for (int step = 0; step < 1; step++) {
+        double improved;
+        int timeout = 0;
+        do {
+            timeout++;
+            improved = 0;
             for (Symbol s : output.symbols) {
+                double dist_before = s.distanceToRegion();
+                if (dist_before == 0) continue;
                 Vector opt = findClosest(s, s.getRegion().getAnchor(), output.symbols);
                 s.getCenter().set(opt);
-
+                improved += dist_before - s.distanceToRegion();
             }
+        } while (improved > 0 && timeout < 100);
+
+        if (timeout == 100) {
+            System.err.println(input.generalName() + " timed out");
         }
 
         return output;
     }
 
 
-    Vector findClosest(Symbol current, Vector goal, Collection<Symbol> obstacles) {
+    private Vector findClosest(Symbol current, Vector goal, Collection<Symbol> obstacles) {
         Vector dir = Vector.subtract(goal, current.getCenter());
         Vector best = current.getCenter();
 
@@ -40,7 +50,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         return best;
     }
 
-    Vector findClosest(Symbol current, Vector goal, Vector dir, Collection<Symbol> obstacles) {
+    private Vector findClosest(Symbol current, Vector goal, Vector dir, Collection<Symbol> obstacles) {
         Line line = new Line(goal, dir);
         List<Event> events = new ArrayList<>();
         for (Symbol s : obstacles) {
