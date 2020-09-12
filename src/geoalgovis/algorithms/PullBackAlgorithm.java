@@ -21,7 +21,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
         Output output = placeAway(new Output(input));
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        output = pullBack(output, 1, true, null);
+        output = pullBack(output, true, null, null, null);
         return output;
     }
 
@@ -45,31 +45,38 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * Try a total of 180/radi_step lines to align on.
      *
      * @param output any output
-     * @param max_iter the maximum number of iterations to apply pullBack, terminates earlier when converged
      * @param is_valid whether the current output is non-overlapping, if null tests for validity
+     * @param max_iter the maximum number of iterations to apply pullBack, terminates earlier when converged
+     * @param min_delta the minimum relative change to consider until convergence is not reached
      * @param radi_step 180/radi_step is the number of alignment-lines to consider
      */
-    public Output pullBack(Output output, Integer max_iter, Boolean is_valid, Double radi_step) {
-        if (max_iter == null) max_iter = 1;
+    public Output pullBack(Output output, Boolean is_valid, Integer max_iter, Double min_delta, Double radi_step) {
+        // set default values
         if (is_valid == null) is_valid = output.isValid();
+        if (max_iter == null) max_iter = 25;
+        if (min_delta == null) min_delta = 0.0001;
         if (radi_step == null) radi_step = 1d;
 
-        double improved = 1;
-        for (int iter = 0; iter < max_iter && improved > 0; iter++) {
-            improved = 0;
+        double current_quality = output.computeQuality();
+        double prev_quality = 2*current_quality;
+        for (int iter = 0; iter < max_iter && (1+min_delta)*current_quality < prev_quality; iter++) {
+            prev_quality = current_quality;
             for (Symbol s : output.symbols) {
-                double dist_before = s.distanceToRegion();
-                if (dist_before == 0 && is_valid) continue; // only re-align if non-optimal or overlap is present
+                if (s.distanceToRegion() == 0 && is_valid) continue; // only re-align if non-optimal or overlapping
                 Vector opt = findClosest(s, s.getRegion().getAnchor(), output.symbols, radi_step);
                 s.getCenter().set(opt);
-                improved += dist_before - s.distanceToRegion();
             }
             is_valid = true;
+            current_quality = output.computeQuality();
         }
 
-        if (improved > 0) {
-            System.out.println("pullBack did not converge on " + output.getName() + ", with max_iter = " + max_iter);
-        }
+        // indicate when this run did not converge properly
+        if ((1+min_delta)*current_quality < prev_quality) System.out.println(
+                "pullBack did not converge on " + output.getName() +
+                ", with max_iter = " + max_iter +
+                ", and min_delta = " + min_delta
+        );
+
         return output;
     }
 
