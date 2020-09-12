@@ -61,7 +61,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
             if (is_valid) {
                 return algorithmName + " solving " + output.getName() + " took " + duration + " sec and gave score " + score + "(valid)";
             } else {
-                return algorithmName + " solving " + output.getName() + " took " + duration + " sec and gave score " + score + "(valid)";
+                return algorithmName + " solving " + output.getName() + " took " + duration + " sec and gave score " + score + "(invalid)";
             }
         }
 
