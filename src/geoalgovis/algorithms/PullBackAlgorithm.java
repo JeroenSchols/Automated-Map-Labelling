@@ -19,23 +19,9 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
 
     @Override
     public Output doAlgorithm(Input input) {
-        Output output = placeAway(new Output(input));
+        Output output = Util.placeAway(new Output(input));
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
         output = pullBack(output, true, null, null, null);
-        return output;
-    }
-
-    /**
-     * place all points far away from all regions to start with a clean slate
-     */
-    private Output placeAway(Output output) {
-        Rectangle boundingBox = output.getBoundingBox();
-        double x = boundingBox.width() + boundingBox.getRight();
-        double y = boundingBox.height() + boundingBox.getTop();
-        for (Symbol s : output.symbols) {
-            s.getCenter().set(x + s.getRadius(), y);
-            x += 2*s.getRadius();
-        }
         return output;
     }
 
