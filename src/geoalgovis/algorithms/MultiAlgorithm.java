@@ -17,8 +17,6 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
         Collections.sort(results);
 
-        for (Result result : results) System.out.println(result);
-
         return results.get(0).output;
     }
 
@@ -54,22 +52,23 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
             this.duration = duration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
+            System.out.println(this);
         }
 
         @Override
         public String toString() {
             if (is_valid) {
-                return algorithmName + " solving " + output.getName() + " took " + duration + " sec and gave score " + score + "(valid)";
+                return algorithmName + " solving " + output.input.instanceName() + " took " + duration + " sec and gave score " + score + "(valid)";
             } else {
-                return algorithmName + " solving " + output.getName() + " took " + duration + " sec and gave score " + score + "(invalid)";
+                return algorithmName + " solving " + output.input.instanceName() + " took " + duration + " sec and gave score " + score + "(invalid)";
             }
         }
 
         @Override
         public int compareTo(Result that) {
-            if (this.is_valid && !that.is_valid) return 1;
-            if (!this.is_valid && that.is_valid) return -1;
-            return Double.compare(that.score, this.score);
+            if (this.is_valid && !that.is_valid) return -1;
+            if (!this.is_valid && that.is_valid) return 1;
+            return Double.compare(this.score, that.score);
         }
     }
 }
