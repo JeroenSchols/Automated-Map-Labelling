@@ -6,6 +6,7 @@
 package geoalgovis.symbolplacement;
 
 import geoalgovis.algorithms.GravitationalAlgorithm;
+import geoalgovis.algorithms.MultiAlgorithm;
 import geoalgovis.algorithms.PullBackAlgorithm;
 import geoalgovis.problem.ProblemDefinition;
 import geoalgovis.algorithms.LineupAlgorithm;
@@ -31,8 +32,8 @@ public class SymbolPlacement extends ProblemDefinition<Input,Output,SymbolPlacem
         return new SymbolPlacementAlgorithm[]{
             new LineupAlgorithm(),
             new GravitationalAlgorithm(),
-            new PullBackAlgorithm()
+            new PullBackAlgorithm(),
+            new MultiAlgorithm()
         };
     }
-    
 }
