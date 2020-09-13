@@ -7,19 +7,23 @@ import java.util.*;
 
 public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
-    private static final boolean show_output = true;
+    private static final boolean __show_output__ = true;
 
     @Override
     public Output doAlgorithm(Input input) {
 
         ArrayList<Result> results = new ArrayList<>();
 
-        results.add(pullBackAlgorithmIncreasingRadi(new Output(input)));
-        results.add(pullBackAlgorithmDecreasingRadi(new Output(input)));
+        boolean equalradi = true;
+        for (Region region : input.regions) if (region.getWeight() != input.regions.get(0).getWeight()) equalradi = false;
+
+        results.add(increasingRadiPullBack(new Output(input)));
+        if (!equalradi) results.add(decreasingRadiPullBack(new Output(input)));
+        results.add(avgCenterSpreadPullBack(new Output(input)));
 
         Collections.sort(results);
 
-        if (show_output) {
+        if (__show_output__) {
             for (Result result : results) {
                 System.out.println(result);
             }
@@ -30,22 +34,33 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         return results.get(0).output;
     }
 
-    private Result pullBackAlgorithmIncreasingRadi(Output output) {
+    // place away all circles, use PullBack to place smallest radius first
+    private Result increasingRadiPullBack(Output output) {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        output = new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null);
         long endTime = System.nanoTime();
-        return new Result(output, "pullBackAlgorithmIncreasingRadi", endTime - startTime);
+        return new Result(output, "increasingRadiPullBack", endTime - startTime);
     }
 
-    private Result pullBackAlgorithmDecreasingRadi(Output output) {
+    // place away all circles, use PullBack to place largest radius first
+    private Result decreasingRadiPullBack(Output output) {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
-        output = new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null);
         long endTime = System.nanoTime();
-        return new Result(output, "pullBackAlgorithmDecreasingRadi", endTime - startTime);
+        return new Result(output, "decreasingRadiPullBack", endTime - startTime);
+    }
+
+    // spread all circles around the average initial center, pull back in order of spread
+    private Result avgCenterSpreadPullBack(Output output) {
+        long startTime = System.nanoTime();
+        new CenterSpreadAlgorithm().centerSpread(output.symbols, Util.getAvgCenter(output.symbols));
+        new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        long endTime = System.nanoTime();
+        return new Result(output, "avgCenterSpreadPullBack", endTime - startTime);
     }
 
     private class Result implements Comparable<Result>{
@@ -62,15 +77,14 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
             this.duration = duration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
-            if (show_output) System.out.println(this);
         }
 
         @Override
         public String toString() {
             if (is_valid) {
-                return algorithmName + " solving " + output.input.instanceName() + " took " + duration + " sec and gave score " + score + "(valid)";
+                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " and scored " + score + " (valid)";
             } else {
-                return algorithmName + " solving " + output.input.instanceName() + " took " + duration + " sec and gave score " + score + "(invalid)";
+                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " and scored " + score + " (invalid)";
             }
         }
 

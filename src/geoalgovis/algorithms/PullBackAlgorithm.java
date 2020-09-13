@@ -21,7 +21,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
         Output output = Util.placeAway(new Output(input));
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        output = pullBack(output, true, null, null, null);
+        pullBack(output, true, null, null, null);
         return output;
     }
 
@@ -36,7 +36,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * @param min_delta the minimum relative change to consider until convergence is not reached
      * @param radi_step 180/radi_step is the number of alignment-lines to consider
      */
-    public Output pullBack(Output output, Boolean is_valid, Integer max_iter, Double min_delta, Double radi_step) {
+    void pullBack(Output output, Boolean is_valid, Integer max_iter, Double min_delta, Double radi_step) {
         // set default values
         if (is_valid == null) is_valid = output.isValid();
         if (max_iter == null) max_iter = 25;
@@ -57,13 +57,11 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         }
 
         // indicate when this run did not converge properly
-        if ((1+min_delta)*current_quality < prev_quality) System.out.println(
+        if ((1+min_delta)*current_quality < prev_quality) System.err.println(
                 "pullBack did not converge on " + output.getName() +
                 ", with max_iter = " + max_iter +
                 ", and min_delta = " + min_delta
         );
-
-        return output;
     }
 
     /**
