@@ -7,6 +7,8 @@ import java.util.*;
 
 public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
+    private static final boolean show_output = true;
+
     @Override
     public Output doAlgorithm(Input input) {
 
@@ -16,6 +18,14 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         results.add(pullBackAlgorithmDecreasingRadi(new Output(input)));
 
         Collections.sort(results);
+
+        if (show_output) {
+            for (Result result : results) {
+                System.out.println(result);
+            }
+            Result result = results.get(0);
+            System.out.println(result.algorithmName + " performed best for " + result.output.input.instanceName());
+        }
 
         return results.get(0).output;
     }
@@ -52,7 +62,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
             this.duration = duration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
-            System.out.println(this);
+            if (show_output) System.out.println(this);
         }
 
         @Override
