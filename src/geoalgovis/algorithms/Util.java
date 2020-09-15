@@ -47,4 +47,18 @@ class Util {
     static void sortAroundPoint(List<Symbol> symbols, Vector point) {
         symbols.sort((s1, s2) -> (int) (s1.getCenter().distanceTo(point) - s2.getCenter().distanceTo(point)));
     }
+
+    /**
+     * check whether two symbols overlap
+     */
+    static boolean checkOverlap(Symbol a, Symbol b) {
+        return a.getRadius() + b.getRadius() - a.getCenter().distanceTo(b.getCenter()) > 0;
+    }
+
+    /**
+     * calculate the amount of overlap
+     */
+    static double calcOverlap(Symbol a, Symbol b) {
+        return a.getRadius() + b.getRadius() - a.getCenter().distanceTo(b.getCenter());
+    }
 }

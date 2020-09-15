@@ -30,6 +30,7 @@ public class SymbolPlacement extends ProblemDefinition<Input,Output,SymbolPlacem
             new LineupAlgorithm(),
             new CenterSpreadAlgorithm(),
             new GravitationalAlgorithm(),
+            new PushAlgorithm(),
             new PullBackAlgorithm(),
             new MultiAlgorithm()
         };
