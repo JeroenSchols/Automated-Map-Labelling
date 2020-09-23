@@ -2,10 +2,13 @@ package geoalgovis.algorithms;
 
 import geoalgovis.symbolplacement.Output;
 import geoalgovis.symbolplacement.Symbol;
+import jdk.internal.org.objectweb.asm.tree.MethodInsnNode;
 import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometry.linear.Rectangle;
+import nl.tue.geometrycore.util.Pair;
 
-import java.util.List;
+import java.util.*;
 
 class Util {
 
@@ -60,5 +63,66 @@ class Util {
      */
     static double calcOverlap(Symbol a, Symbol b) {
         return a.getRadius() + b.getRadius() - a.getCenter().distanceTo(b.getCenter());
+    }
+
+    /**
+     * checks whether a symbols has any overlap
+     */
+    static boolean hasOverlap(Symbol current, List<Symbol> symbols) {
+        for (Symbol s : symbols) {
+            if (s == current) continue;
+            if (checkOverlap(current, s)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * sort a region on a direction
+     */
+    static List<Pair<Symbol, Vector>> sortRegionDir(List<Symbol> symbols, RegionSortDirection dir, Vector origin) {
+        if (origin == null) origin = getAvgAnchor(symbols); // pick as default the average anchor as origin
+        ArrayList<Pair<Symbol, Vector>> symbolsValuated = new ArrayList<>();
+
+        // set weights to coordinates dependent on direction
+        double x = 0;
+        double y = 0;
+        switch (dir) {
+            case North:         x = 0; y = 1; break;
+            case NorthEast:     x = 1; y = 1; break;
+            case East:          x = 1; y = 0; break;
+            case SouthEast:     x = 1; y = -1; break;
+            case South:         x = 0; y = -1; break;
+            case SouthWest:     x = -1; y = -1; break;
+            case West:          x = -1; y = 0; break;
+            case NorthWest:     x = -1; y = 1; break;
+        }
+        double finalX = x;
+        double finalY = y;
+
+        for (Symbol s : symbols) {
+            List<Vector> vertices = new ArrayList<>();
+            for (Polygon a : s.getRegion().getParts()) vertices.addAll(a.vertices());
+            Vector relBest = Vector.subtract(vertices.get(0), origin);
+            for (Vector vertex : vertices) {
+                Vector relVertex = Vector.subtract(vertex, origin);
+                if (x * relVertex.getX() + y * relVertex.getY() > x * relBest.getX() + y * relBest.getY()) relBest = relVertex;
+            }
+            Vector best = Vector.add(relBest, origin);
+            symbolsValuated.add(new Pair<>(s, best));
+        }
+
+        symbolsValuated.sort(Comparator.comparingDouble(s -> - finalX * s.getSecond().getX() - finalY * s.getSecond().getY()));
+        return symbolsValuated;
+    }
+
+    enum RegionSortDirection {
+        North,
+        NorthEast,
+        East,
+        SouthEast,
+        South,
+        SouthWest,
+        West,
+        NorthWest
     }
 }
