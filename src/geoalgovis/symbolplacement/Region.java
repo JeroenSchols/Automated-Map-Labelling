@@ -21,9 +21,9 @@ public class Region extends GeometryGroup<Polygon> {
     private double weight = 1;
     private int index;
     private Vector anchor = Vector.origin();
-    private Collection<Vector> extremaAnchors = null;
-    private Collection<Vector> sampleAnchors = null;
-    private Collection<Vector> allAnchors = null;
+    private List<Vector> extremaAnchors = null;
+    private List<Vector> sampleAnchors = null;
+    private List<Vector> allAnchors = null;
     private Double min_x = null;
     private Double min_y = null;
     private Double max_x = null;
@@ -98,7 +98,7 @@ public class Region extends GeometryGroup<Polygon> {
 
     }
 
-    public Collection<Vector> getExtremaAnchors() {
+    public List<Vector> getExtremaAnchors() {
         if (this.extremaAnchors != null) return this.extremaAnchors;
 
         List<Vector> boundaryVectors = new ArrayList<>();
@@ -115,7 +115,7 @@ public class Region extends GeometryGroup<Polygon> {
             if (max_y.getY() < v.getY()) max_y = v;
         }
 
-        this.extremaAnchors = new HashSet<>();
+        this.extremaAnchors = new ArrayList<>();
         this.extremaAnchors.add(min_x);
         this.extremaAnchors.add(max_x);
         this.extremaAnchors.add(min_y);
@@ -130,7 +130,7 @@ public class Region extends GeometryGroup<Polygon> {
         return this.extremaAnchors;
     }
 
-    public Collection<Vector> getSampleAnchors() {
+    public List<Vector> getSampleAnchors() {
         if (this.sampleAnchors != null) return this.sampleAnchors;
         if (this.extremaAnchors == null) this.getExtremaAnchors();
 
@@ -145,7 +145,7 @@ public class Region extends GeometryGroup<Polygon> {
         return this.sampleAnchors;
     }
 
-    public Collection<Vector> getAllAnchors() {
+    public List<Vector> getAllAnchors() {
         if (this.allAnchors != null) return this.allAnchors;
         if (this.sampleAnchors == null) this.getSampleAnchors();
         this.allAnchors = new ArrayList<>();

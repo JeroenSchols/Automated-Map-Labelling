@@ -7,8 +7,9 @@ import java.util.*;
 
 import static geoalgovis.algorithms.Util.calcOverlap;
 
-@SuppressWarnings("Duplicates")
 public class PushAlgorithm extends SymbolPlacementAlgorithm {
+
+    private final Random random = new Random(0);
 
     @Override
     public Output doAlgorithm(Input input) {
@@ -21,7 +22,9 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
                 if (current.distanceToRegion() == 0) {
                     transMap.put(current, new Vector(0,0));
                 } else {
-                    transMap.put(current, Vector.multiply(Math.max(0.0, 1.0 - step / n_step), Vector.subtract(current.getRegion().getAnchor(), current.getCenter())));
+
+                    Vector randomAnchor = current.getRegion().getExtremaAnchors().get(random.nextInt(current.getRegion().getExtremaAnchors().size()));
+                    transMap.put(current, Vector.multiply(Math.max(0.0, 1.0 - step / n_step), Vector.subtract(randomAnchor, current.getCenter())));
                 }
             }
 
@@ -51,6 +54,11 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
             for (Map.Entry<Symbol, Vector> e : transMap.entrySet()) {
                 e.getKey().getCenter().translate(e.getValue());
             }
+        }
+
+        if (!output.isValid()) {
+            System.err.println(input.generalName() + " was not valid after pushing");
+            return output;
         }
 
         output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
