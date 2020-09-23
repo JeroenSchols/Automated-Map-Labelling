@@ -14,7 +14,15 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
     @Override
     public Output doAlgorithm(Input input) {
         Output output = new Output(input);
+        pushRun(output);
+        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
+        new PullBackAlgorithm().pullBack(output, null, null, 180.0, PullBackAlgorithm.CandidateGoals.Anchor);
+        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
+        new PullBackAlgorithm().pullBack(output, null, null, null, PullBackAlgorithm.CandidateGoals.All);
+        return output;
+    }
 
+    void pushRun(Output output) {
         double n_step = 100;
         for (double step = 0.0; step <= 5 * n_step && !output.isValid(); step++) {
             HashMap<Symbol, Vector> transMap = new HashMap<>();
@@ -55,18 +63,5 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
                 e.getKey().getCenter().translate(e.getValue());
             }
         }
-
-        if (!output.isValid()) {
-            System.err.println(input.generalName() + " was not valid after pushing");
-            return output;
-        }
-
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, true, null, null, 180.0, PullBackAlgorithm.CandidateGoals.Anchor);
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, true, null, null, null, PullBackAlgorithm.CandidateGoals.All);
-
-        // and make sure to return the result
-        return output;
     }
 }
