@@ -125,4 +125,11 @@ class Util {
         West,
         NorthWest
     }
+
+    enum CandidateGoals {
+        Anchor,
+        Sample,
+        Extrema,
+        All
+    }
 }

@@ -14,15 +14,15 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
     @Override
     public Output doAlgorithm(Input input) {
         Output output = new Output(input);
-        pushRun(output);
+        pushRun(output, Util.CandidateGoals.Anchor);
         output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, 180.0, PullBackAlgorithm.CandidateGoals.Anchor);
+        new PullBackAlgorithm().pullBack(output, null, null, 180.0, Util.CandidateGoals.Anchor);
         output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, null, PullBackAlgorithm.CandidateGoals.All);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.All);
         return output;
     }
 
-    void pushRun(Output output) {
+    void pushRun(Output output, Util.CandidateGoals cGoals) {
         double n_step = 100;
         for (double step = 0.0; step <= 5 * n_step && !output.isValid(); step++) {
             HashMap<Symbol, Vector> transMap = new HashMap<>();
@@ -30,9 +30,21 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
                 if (current.distanceToRegion() == 0) {
                     transMap.put(current, new Vector(0,0));
                 } else {
-
-                    Vector randomAnchor = current.getRegion().getExtremaAnchors().get(random.nextInt(current.getRegion().getExtremaAnchors().size()));
-                    transMap.put(current, Vector.multiply(Math.max(0.0, 1.0 - step / n_step), Vector.subtract(randomAnchor, current.getCenter())));
+                    // pick a random goal
+                    // @TODO potentially do this always
+                    List<Vector> goals = null;
+                    switch (cGoals) {
+                        case All: goals = current.getRegion().getAllAnchors(); break;
+                        case Anchor: goals = new ArrayList<>(); goals.add(current.getRegion().getAnchor()); break;
+                        case Extrema: goals = current.getRegion().getExtremaAnchors(); break;
+                        case Sample: goals = current.getRegion().getSampleAnchors(); break;
+                    }
+                    Vector randomAnchor = goals.get(random.nextInt(goals.size()));
+                    if (randomAnchor.distanceTo(current.getCenter()) == 0) {
+                        transMap.put(current, new Vector(0,0));
+                    } else {
+                        transMap.put(current, Vector.multiply(Math.max(0.0, 1.0 - step / n_step), Vector.subtract(randomAnchor, current.getCenter())));
+                    }
                 }
             }
 
