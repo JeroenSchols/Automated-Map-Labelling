@@ -30,7 +30,8 @@ public class SymbolPlacement extends ProblemDefinition<Input,Output,SymbolPlacem
             new CenterSpreadAlgorithm(),
             new PushAlgorithm(),
             new PullBackAlgorithm(),
-            new MultiAlgorithm()
+            new MultiAlgorithm(),
+            new CombinationAlgorithm()
         };
     }
 }
