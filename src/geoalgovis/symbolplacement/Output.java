@@ -97,6 +97,10 @@ public class Output extends Solution {
 
     @Override
     public void draw(GeometryRenderer render) {
+        Symbol worst = symbols.get(0);
+        for (Symbol s : symbols) if (worst.distanceToRegion() < s.distanceToRegion()) worst = s;
+
+
         input.draw(render, false);
         render.setSizeMode(SizeMode.VIEW);
         render.setStroke(Color.blue, 2, Dashing.SOLID);
@@ -106,6 +110,11 @@ public class Output extends Solution {
         render.setFill(null, Hashures.SOLID);
         render.setForwardArrowStyle(ArrowStyle.LINEAR, 3);
         for (Symbol s : symbols) {
+            if (s == worst) {
+                render.setStroke(Color.green, 2, Dashing.SOLID);
+            } else {
+                render.setStroke(Color.blue, 2, Dashing.SOLID);
+            }
             Vector c = s.getCenter();
             render.draw(c, s.getRegion().getName());
             Vector dir = s.vectorToRegion();

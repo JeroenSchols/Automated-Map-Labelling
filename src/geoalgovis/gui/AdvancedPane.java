@@ -526,9 +526,13 @@ public class AdvancedPane extends JPanel {
         }
         System.out.println("Writing CSV");
         String csvOutput = "Filename;Matched Problem;Ruling;Score\r\n";
+        double tot_score = 0;
         for (int i = 0; i < names.size(); i++) {
+            tot_score += score.get(i);
+            System.out.println(names.get(i)+','+score.get(i));
             csvOutput += names.get(i) + ";" + problemName.get(i) + ";" + ruling.get(i) + ";" + score.get(i) + "\r\n";
         }
+        System.out.println("total score = " + tot_score);
         File file = new File(directory.getAbsolutePath() + File.separator + "results.csv");
         if (file.exists()) {
             file.delete();

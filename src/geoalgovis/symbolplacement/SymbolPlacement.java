@@ -27,9 +27,7 @@ public class SymbolPlacement extends ProblemDefinition<Input,Output,SymbolPlacem
     @Override
     public SymbolPlacementAlgorithm[] getAlgorithms() {
         return new SymbolPlacementAlgorithm[]{
-            new LineupAlgorithm(),
             new CenterSpreadAlgorithm(),
-            new GravitationalAlgorithm(),
             new PushAlgorithm(),
             new PullBackAlgorithm(),
             new MultiAlgorithm()
