@@ -39,7 +39,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null, null);
         long endTime = System.nanoTime();
         return new Result(output, "increasingRadiPullBack", endTime - startTime);
     }
@@ -49,7 +49,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
-        new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null, null);
         long endTime = System.nanoTime();
         return new Result(output, "decreasingRadiPullBack", endTime - startTime);
     }
@@ -58,7 +58,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
     private Result avgCenterSpreadPullBack(Output output) {
         long startTime = System.nanoTime();
         new CenterSpreadAlgorithm().centerSpread(output.symbols, Util.getAvgCenter(output.symbols));
-        new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null, null);
         long endTime = System.nanoTime();
         return new Result(output, "avgCenterSpreadPullBack", endTime - startTime);
     }

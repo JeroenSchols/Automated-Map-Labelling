@@ -54,9 +54,9 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
         }
 
         output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, true, null, null, 180.0);
+        new PullBackAlgorithm().pullBack(output, true, null, null, 180.0, PullBackAlgorithm.CandidateGoals.Anchor);
         output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, true, null, null, null);
+        new PullBackAlgorithm().pullBack(output, true, null, null, null, PullBackAlgorithm.CandidateGoals.All);
 
         // and make sure to return the result
         return output;

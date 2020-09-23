@@ -5,6 +5,7 @@ import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 import nl.tue.geometrycore.geometry.linear.*;
+import nl.tue.geometrycore.util.Pair;
 
 import java.util.*;
 
@@ -19,10 +20,21 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
 
     @Override
     public Output doAlgorithm(Input input) {
-        Output output = Util.placeAway(new Output(input));
-        output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        pullBack(output, true, null, null, null);
-        return output;
+        Output bestOutput = Util.placeAway(new Output(input));
+
+        for (Util.RegionSortDirection dir : Util.RegionSortDirection.values()) {
+            System.out.println("checking :" + dir.name());
+            Output output = Util.placeAway(new Output(input));
+            List<Pair<Symbol, Vector>> symbolsValuated = Util.sortRegionDir(output.symbols, dir, null);
+            for (int i = 0; i < symbolsValuated.size(); i++) {
+                output.symbols.set(i, symbolsValuated.get(i).getFirst());
+                symbolsValuated.get(i).getFirst().getRegion().setAnchor(symbolsValuated.get(i).getSecond());
+            }
+            pullBack(output, true, 1, null, null, null);
+            if (output.isValid() && output.computeQuality() < bestOutput.computeQuality()) bestOutput = output;
+        }
+
+        return bestOutput;
     }
 
     /**
@@ -35,13 +47,15 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * @param max_iter the maximum number of iterations to apply pullBack, terminates earlier when converged
      * @param min_delta the minimum relative change to consider until convergence is not reached
      * @param radi_step 180/radi_step is the number of alignment-lines to consider
+     * @param cGoals which goals to try pulling towards
      */
-    void pullBack(Output output, Boolean is_valid, Integer max_iter, Double min_delta, Double radi_step) {
+    void pullBack(Output output, Boolean is_valid, Integer max_iter, Double min_delta, Double radi_step, CandidateGoals cGoals) {
         // set default values
         if (is_valid == null) is_valid = output.isValid();
         if (max_iter == null) max_iter = 25;
         if (min_delta == null) min_delta = 0.0001;
         if (radi_step == null) radi_step = 1d;
+        if (cGoals == null) cGoals = CandidateGoals.All;
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
@@ -49,7 +63,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
             prev_quality = current_quality;
             for (Symbol s : output.symbols) {
                 if (s.distanceToRegion() == 0 && is_valid) continue; // only re-align if non-optimal or overlapping
-                Vector opt = findClosest(s, s.getRegion().getAnchor(), output.symbols, radi_step);
+                Vector opt = findClosest(s, output.symbols, radi_step, cGoals);
                 s.getCenter().set(opt);
             }
             is_valid = true;
@@ -64,9 +78,40 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         );
     }
 
+
+    /**
+     * For a current symbol try and align as close as possible to any goal point without overlapping with obstacles
+     * Try a total of 180/radi_step lines to align on. A goal point is either the anchor or a point on the boundary
+     *
+     * @param current the current symbol to be aligned
+     * @param obstacles all symbols (is allowed to contain current, yet filtered out)
+     * @param radi_step 180/radi_step is the number of alignment-lines to consider
+     * @return the closest point on an alignment-line for current to goal to be located on without overlapping obstacles
+     * @param cGoals which goals to try pulling towards
+     */
+    private Vector findClosest(Symbol current, Collection<Symbol> obstacles, double radi_step, CandidateGoals cGoals) {
+        Vector best = current.getCenter();
+
+        Collection<Vector> goals = null;
+        switch (cGoals) {
+            case All: goals = current.getRegion().getAllAnchors(); break;
+            case Anchor: goals = new ArrayList<>(); goals.add(current.getRegion().getAnchor()); break;
+            case Sample: goals = current.getRegion().getSampleAnchors(); break;
+            case Extrema: goals = current.getRegion().getExtremaAnchors(); break;
+        }
+
+        for (Vector goal : goals) {
+            Vector closest = findClosest(current, goal, obstacles, radi_step);
+            if (current.getRegion().distanceToRegion(closest) < current.getRegion().distanceToRegion(best)) best = closest;
+        }
+
+        return best;
+    }
+
+
     /**
      * For a current symbol try and align as close as possible to the goal point without overlapping with obstacles
-     * Try a total of 180/radi_step lines to align one.
+     * Try a total of 180/radi_step lines to align on.
      *
      * @param current the current symbol to be aligned
      * @param goal the goal to be aligned to
@@ -85,6 +130,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
 
         return best;
     }
+
 
     /**
      * For a current symbol try and align as close as possible to the goal point without
@@ -132,6 +178,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         return Vector.add(goal, Vector.multiply(best, dir)); // return the point closest to goal on line
     }
 
+
     // class corresponding to start and end points of intervals on lines
     private class Event {
 
@@ -142,5 +189,12 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
             this.t = t;
             this.delta = delta;
         }
+    }
+
+    enum CandidateGoals {
+        Anchor,
+        Sample,
+        Extrema,
+        All
     }
 }
