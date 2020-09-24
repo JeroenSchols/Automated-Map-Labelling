@@ -52,6 +52,26 @@ class Util {
     }
 
     /**
+     * gives a minor deplacement to a symbol when it has a center equal to another symbol
+     */
+    static void removeOverlappingCenters(List<Symbol> symbols) {
+        boolean valid;
+        do {
+            valid = true;
+            outer: for (Symbol s1 : symbols) {
+                for (Symbol s2 : symbols) {
+                    if (s1.hashCode() >= s2.hashCode()) continue;
+                    if (s1.getCenter().distanceTo(s2.getCenter()) == 0) {
+                        s1.getCenter().translate(0.0001, 0.0001);
+                        valid = false;
+                        break outer;
+                    }
+                }
+            }
+        } while(!valid);
+    }
+
+    /**
      * check whether two symbols overlap
      */
     static boolean checkOverlap(Symbol a, Symbol b) {

@@ -6,12 +6,42 @@ import geoalgovis.symbolplacement.Symbol;
 import geoalgovis.symbolplacement.SymbolPlacementAlgorithm;
 import nl.tue.geometrycore.geometry.Vector;
 
-import java.util.Comparator;
+import java.util.Random;
 
 public class CombinationAlgorithm extends SymbolPlacementAlgorithm {
 
+    Random random = new Random(0);
+
     @Override
     public Output doAlgorithm(Input input) {
+//        return case1(input);
+//        return case2(input);
+        return case3(input);
+    }
+
+
+    private Output case3(Input input) {
+        Output output = new Output(input);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, null, null);
+        new PostProcessAlgorithm().postprocess(output);
+        return output;
+    }
+
+    private Output case2(Input input) {
+        Output output = new Output(input);
+        Util.sortAroundPoint(output.symbols, Util.getAvgAnchor(output.symbols));
+        Util.placeAway(output);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.All);
+        new CenterSpreadAlgorithm().centerSpread(output.symbols, Util.getAvgCenter(output.symbols));
+
+        new PostProcessAlgorithm().postprocess(output);
+
+
+        return output;
+    }
+
+    private Output case1(Input input) {
         Output output = new Output(input);
 
         Vector center = Util.getAvgCenter(output.symbols);
@@ -21,28 +51,9 @@ public class CombinationAlgorithm extends SymbolPlacementAlgorithm {
             Vector dir = s.vectorToRegion();
             if (dir != null) s.getCenter().translate(dir);
         }
-
-        // displaces two symbols minimally in case their centers are equivalent
-        boolean valid;
-        do {
-            valid = true;
-            outer: for (Symbol s1 : output.symbols) {
-                for (Symbol s2 : output.symbols) {
-                    if (s1.hashCode() >= s2.hashCode()) continue;
-                    if (s1.getCenter().distanceTo(s2.getCenter()) == 0) {
-                        s1.getCenter().translate(0.0001, 0.0001);
-                        valid = false;
-                        break outer;
-                    }
-                }
-            }
-        } while(!valid);
-
+        Util.removeOverlappingCenters(output.symbols);
         new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema);
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, 180.0, Util.CandidateGoals.Anchor);
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.All);
+        new PostProcessAlgorithm().postprocess(output);
 
         return output;
     }
