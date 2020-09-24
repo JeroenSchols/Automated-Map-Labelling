@@ -15,13 +15,16 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
         Output output = new Output(input);
         pushRun(output, Util.CandidateGoals.Anchor);
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, 180.0, Util.CandidateGoals.Anchor);
-        output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.All);
         return output;
     }
 
+    /**
+     * uses a gravitational algorithm that pushes overlapping symbols away
+     * proportional to their squared distance to their respective regions
+     *
+     * @param output the output to be run on
+     * @param cGoals which anchor points to pull towards
+     */
     void pushRun(Output output, Util.CandidateGoals cGoals) {
         double n_step = 100;
         for (double step = 0.0; step <= 5 * n_step && !output.isValid(); step++) {
@@ -30,8 +33,6 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
                 if (current.distanceToRegion() == 0) {
                     transMap.put(current, new Vector(0,0));
                 } else {
-                    // pick a random goal
-                    // @TODO potentially do this always
                     List<Vector> goals = null;
                     switch (cGoals) {
                         case All: goals = current.getRegion().getAllAnchors(); break;
