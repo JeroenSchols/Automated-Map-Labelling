@@ -166,6 +166,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
                 }
             }
         }
+        events.add(new Event(0, 0));
         events.sort(Comparator.comparingDouble(event -> event.t)); // sort all events on t
 
         double best = Float.MAX_VALUE; // the smallest distance considered where current can be placed from goal
