@@ -15,10 +15,11 @@ import java.io.IOException;
  */
 public class SampleGenerator {
     public static void main(String[] args) {
+        int numberOfSamples = 1000;
         
-        String sampleFolder = "C:\\Users\\Mart\\Downloads\\Project-Algorithms-for-geographic-data\\inputs\\generated\\"; // Folder for samples
+        String sampleFolder = "C:\\Project-Algorithms-for-geographic-data\\inputs\\generated\\"; // Folder for samples
         
-        for (int i = 1; i <= 100; i++) { 
+        for (int i = 1; i <= numberOfSamples; i++) { 
             try {
                 int indexSample = i; // Number of sample
 
@@ -34,9 +35,9 @@ public class SampleGenerator {
                 try (FileWriter writer = new FileWriter(sampleFolder+"generatedSample"+indexSample+".txt")) {
                     int numberOfRegions = (int)Math.round(Math.random()*49)+1;
                     for (int j = 0; j < numberOfRegions; j++) {
-                        int x = (int)Math.round(Math.random()*50);
-                        int y = (int)Math.round(Math.random()*50);
-                        writer.write(randomCircleLine(x,y)+"\n"+randomRegionLine(x,y)+"\n");
+                        String regionLine = randomRegionLine();
+                        String circleLine = randomCircleLine(regionLine);
+                        writer.write(circleLine+"\n"+regionLine+"\n");
                     }
                     System.out.println("Successfully generated sample.");
                 }
@@ -48,25 +49,37 @@ public class SampleGenerator {
         
     }
     
-    // Creates random circle text line in the form: 'Label  xCenter yCenter radius 1'
-    static String randomCircleLine(int x, int y){
-        int radius = (int)Math.round(Math.random()*10);
-        return getAlphaNumericString(3)+"	"+x+".0	"+y+".0	"+radius+"	1";
-    }
-    
     // Creates random area text line in the form: 'x_1, y_1, .... , x_n, y_n'
-    static String randomRegionLine(int xBase, int yBase){
+    static String randomRegionLine(){
         String toReturn = "";
-            
-        int numberOfPoints = (int)Math.round(Math.random()*4)+1;
-        for (int i = 0; i < 4; i++) {
-            int x = (int) ((int)xBase + Math.round((Math.random()*49)-25));
-            int y = (int) ((int)yBase + Math.round((Math.random()*49)-25));
+        
+        int moveX = (int)Math.round(Math.random()*100);
+        int moveY = (int)Math.round(Math.random()*100);
+        int numberOfPoints = (int)Math.round(Math.random()*4)+4;
+        for (int i = 0; i < numberOfPoints; i++) {
+            int x = (int) ((int)Math.round((Math.random()*49)-25))+moveX;
+            int y = (int) ((int)Math.round((Math.random()*49)-25))+moveY;
             toReturn = toReturn + x + "\t" + y + "\t";
         }
         toReturn = toReturn.substring(0, toReturn.length() - 1);
         return toReturn;
-        //return "5.0	5.0	10.0	5.0	10.0	10.0	5.0	10.0";
+    }
+    
+    // Creates random circle text line in the form: 'Label  xCenter yCenter radius 1'
+    static String randomCircleLine(String regionLine){
+        String[] arrayPoints = regionLine.split("\t");
+
+        int Xsum = 0;
+        int Ysum = 0;
+        for (int i = 0;i <= (arrayPoints.length /2) - 1;i++){
+            Xsum += Integer.parseInt(arrayPoints[i*2]);
+            Ysum += Integer.parseInt(arrayPoints[(i*2)+1]);
+        }
+        
+        int radius = (int)Math.round(Math.random()*10);
+        int x = (int)Xsum/(arrayPoints.length /2);
+        int y = (int)Ysum/(arrayPoints.length /2);
+        return getAlphaNumericString(3)+"\t"+x+".0\t"+y+".0\t"+radius+"\t1";
     }
     
     // function to generate a random string of length n 
