@@ -1,6 +1,7 @@
 package geoalgovis.algorithms;
 
 import geoalgovis.symbolplacement.*;
+import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 
 import java.util.*;
@@ -17,12 +18,14 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         boolean equalradi = true;
         for (Region region : input.regions) if (region.getWeight() != input.regions.get(0).getWeight()) equalradi = false;
 
-        results.add(increasingRadiPullBack(new Output(input)));
-        if (!equalradi) results.add(decreasingRadiPullBack(new Output(input)));
-        results.add(avgCenterSpreadPullBack(new Output(input)));
+        results.add(increasingRadi(new Output(input)));
+        if (!equalradi) results.add(decreasingRadi(new Output(input)));
+        results.add(centerAreaSpread(new Output(input)));
+        results.add(centralFirst(new Output(input)));
+        results.add(extremeCentralReplace(new Output(input)));
 
+        // sort output and return best
         Collections.sort(results);
-
         if (__show_output__) {
             for (Result result : results) {
                 System.out.println(result);
@@ -35,46 +38,81 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
     }
 
     // place away all circles, use PullBack to place smallest radius first
-    private Result increasingRadiPullBack(Output output) {
+    private Result increasingRadi(Output output) {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        new PullBackAlgorithm().pullBack(output, null, null, null, null);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        long postStartTime = System.nanoTime();
+        new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "increasingRadiPullBack", endTime - startTime);
+        return new Result(output, "increasingRadi", endTime - startTime, postStartTime - startTime);
     }
 
     // place away all circles, use PullBack to place largest radius first
-    private Result decreasingRadiPullBack(Output output) {
+    private Result decreasingRadi(Output output) {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
-        new PullBackAlgorithm().pullBack(output, null, null, null, null);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        long postStartTime = System.nanoTime();
+        new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "decreasingRadiPullBack", endTime - startTime);
+        return new Result(output, "decreasingRadi", endTime - startTime, postStartTime - startTime);
     }
 
-    // spread all circles around the average initial center, pull back in order of spread
-    private Result avgCenterSpreadPullBack(Output output) {
+    private Result centerAreaSpread(Output output) {
         long startTime = System.nanoTime();
-        new CenterSpreadAlgorithm().centerSpread(output.symbols, Util.getAvgCenter(output.symbols));
-        new PullBackAlgorithm().pullBack(output, null, null, null, null);
+        output = Util.placeAway(output);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, null, null);
+        long postStartTime = System.nanoTime();
+        new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "avgCenterSpreadPullBack", endTime - startTime);
+        return new Result(output, "centerAreaSpread", endTime - startTime, postStartTime - startTime);
     }
+
+    private Result centralFirst(Output output) {
+        long startTime = System.nanoTime();
+        Util.sortAroundPoint(output.symbols, Util.getAvgAnchor(output.symbols));
+        Util.placeAway(output);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        long postStartTime = System.nanoTime();
+        new PostProcessAlgorithm().postprocess(output);
+        long endTime = System.nanoTime();
+        return new Result(output, "centralFirst", endTime - startTime, postStartTime - startTime);
+    }
+
+    private Result extremeCentralReplace(Output output) {
+        long startTime = System.nanoTime();
+        Vector center = Util.getAvgAnchor(output.symbols);
+        for (Symbol s : output.symbols) {
+            s.setCenter(center.clone());
+            Vector dir = s.vectorToRegion();
+            if (dir != null) s.getCenter().translate(dir);
+        }
+        Util.removeOverlappingCenters(output.symbols);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema);
+        long postStartTime = System.nanoTime();
+        new PostProcessAlgorithm().postprocess(output);
+        long endTime = System.nanoTime();
+        return new Result(output, "extremeCentralReplace", endTime - startTime, postStartTime - startTime);
+    }
+
 
     private class Result implements Comparable<Result>{
 
         final Output output;
         final String algorithmName;
         final double duration;
+        final double postDuration;
         final boolean is_valid;
         final double score;
 
-        Result(Output output, String algorithmName, double duration) {
+        Result(Output output, String algorithmName, double duration, double postDuration) {
             this.output = output;
             this.algorithmName = algorithmName;
             this.duration = duration / 1000000000;
+            this.postDuration = postDuration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
         }
@@ -82,9 +120,9 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         @Override
         public String toString() {
             if (is_valid) {
-                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " and scored " + score + " (valid)";
+                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " of which " + postDuration + " was postprocessing and scored " + score + " (valid)";
             } else {
-                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " and scored " + score + " (invalid)";
+                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " of which " + postDuration + " was postprocessing and scored " + score + " (invalid)";
             }
         }
 

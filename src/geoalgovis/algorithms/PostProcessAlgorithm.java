@@ -36,7 +36,7 @@ class PostProcessAlgorithm {
      * @param cGoals which goals to try pulling towards using pullBack
      */
     void postprocess(Output output, Integer max_iter_process, Integer max_iter_pullback, Double min_delta_process, Double min_delta_pullback, Double radi_step, Util.CandidateGoals cGoals) {
-        if (max_iter_process == null) max_iter_process = 5;
+        if (max_iter_process == null) max_iter_process = 25; // @TODO figure out why sometimes a lower max_iter performs better
         if (min_delta_process == null) min_delta_process = 0.0001;
         if (cGoals == null) cGoals = Util.CandidateGoals.All;
 
