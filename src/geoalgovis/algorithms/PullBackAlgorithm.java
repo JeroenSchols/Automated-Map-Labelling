@@ -127,7 +127,6 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         for (double deg = 0; deg < 180; deg += radi_step) {
             Vector closest = findClosest(current, goal, Vector.rotate(dir, deg), obstacles);
             if (goal.distanceTo(closest) < goal.distanceTo(best) && current.getRegion().distanceToRegion(closest) <= current.getRegion().distanceToRegion(best)) best = closest;
-//            if (current.getRegion().distanceToRegion(closest) <= current.getRegion().distanceToRegion(best)) best = closest;
         }
 
         return best;

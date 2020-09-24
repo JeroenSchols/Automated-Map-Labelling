@@ -115,6 +115,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
             this.postDuration = postDuration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
+            System.out.println(output.input.instanceName() + " finished running " + algorithmName);
         }
 
         @Override

@@ -2,7 +2,6 @@ package geoalgovis.algorithms;
 
 import geoalgovis.symbolplacement.Output;
 import geoalgovis.symbolplacement.Symbol;
-import jdk.internal.org.objectweb.asm.tree.MethodInsnNode;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 import nl.tue.geometrycore.geometry.linear.Rectangle;

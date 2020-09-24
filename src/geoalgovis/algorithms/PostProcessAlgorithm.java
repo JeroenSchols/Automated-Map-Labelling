@@ -18,14 +18,7 @@ class PostProcessAlgorithm {
      * @param output a output to be post-processed
      */
     void postprocess(Output output) {
-        this.postprocess(
-                output,
-                null,
-                null,
-                null,
-                0.001,
-                3d,
-                Util.CandidateGoals.Extrema);
+        this.postprocess(output,null,null,null,null, null, Util.CandidateGoals.Extrema);
     }
 
     /**
@@ -42,21 +35,18 @@ class PostProcessAlgorithm {
      * @param radi_step 180/radi_step is the number of alignment-lines to consider
      * @param cGoals which goals to try pulling towards using pullBack
      */
-    void postprocess(Output output, Integer max_iter_process, Integer max_iter_pullback, Double min_delta_process,
-                     Double min_delta_pullback, Double radi_step, Util.CandidateGoals cGoals) {
+    void postprocess(Output output, Integer max_iter_process, Integer max_iter_pullback, Double min_delta_process, Double min_delta_pullback, Double radi_step, Util.CandidateGoals cGoals) {
         if (max_iter_process == null) max_iter_process = 25;
-        if (min_delta_process == null) min_delta_process = 0.001;
+        if (min_delta_process == null) min_delta_process = 0.0001;
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
         System.out.println("postprocessing iteration 0 = " + current_quality);
         for (int iter = 0; iter < max_iter_process && (1+min_delta_process)*current_quality < prev_quality; iter++) {
             prev_quality = current_quality;
-
             output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, 180.0, Util.CandidateGoals.Anchor);
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, radi_step, cGoals);
-            System.out.println("swapping");
             new SwapAlgorithm().swap(output.symbols);
             current_quality = output.computeQuality();
             System.out.println("postprocessing iteration " + (iter + 1) + " = " + current_quality);
