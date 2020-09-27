@@ -13,6 +13,8 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
 
     private Random random = new Random(0);
 
+    private final double[] degs = new double[]{1, 2, 4, 8, 16, 32, 64};
+
     /*
      * PullBack algorithm considers lines through the anchorpoint to place the symbol on
      * It does so by finding intersections between other symbols and these lines and creating intervals over these lines
@@ -32,7 +34,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
                 output.symbols.set(i, symbolsValuated.get(i).getFirst());
                 symbolsValuated.get(i).getFirst().getRegion().setAnchor(symbolsValuated.get(i).getSecond());
             }
-            pullBack(output, 1, null, null, null);
+            pullBack(output, 1, null, null, null, null);
             if (output.isValid() && output.computeQuality() < bestOutput.computeQuality()) bestOutput = output;
         }
 
@@ -47,22 +49,24 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * @param output any output
      * @param max_iter the maximum number of iterations to apply pullBack, terminates earlier when converged
      * @param min_delta the minimum relative change to consider until convergence is not reached
-     * @param radi_step 180/radi_step is the number of alignment-lines to consider
+     * @param radi_count the number of alignment-lines to consider
      * @param cGoals which goals to try pulling towards
+     * @param uniform whether rays are uniformly distributed
      */
-    void pullBack(Output output, Integer max_iter, Double min_delta, Double radi_step, Util.CandidateGoals cGoals) {
+    void pullBack(Output output, Integer max_iter, Double min_delta, Integer radi_count, Util.CandidateGoals cGoals, Boolean uniform) {
         // set default values
         if (max_iter == null) max_iter = 25;
         if (min_delta == null) min_delta = 0.0001;
-        if (radi_step == null) radi_step = 1d;
+        if (radi_count == null) radi_count = 180;
         if (cGoals == null) cGoals = Util.CandidateGoals.All;
+        if (uniform == null) uniform = false;
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
         for (int iter = 0; iter < max_iter && (1+min_delta)*current_quality < prev_quality; iter++) {
             prev_quality = current_quality;
             for (Symbol s : output.symbols) {
-                Vector opt = findClosest(s, output.symbols, radi_step, cGoals);
+                Vector opt = findClosest(s, output.symbols, radi_count, cGoals, uniform);
                 s.getCenter().set(opt);
             }
             current_quality = output.computeQuality();
@@ -83,11 +87,12 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      *
      * @param current the current symbol to be aligned
      * @param obstacles all symbols (is allowed to contain current, yet filtered out)
-     * @param radi_step 180/radi_step is the number of alignment-lines to consider
-     * @return the closest point on an alignment-line for current to goal to be located on without overlapping obstacles
+     * @param radi_count the number of alignment-lines to consider
      * @param cGoals which goals to try pulling towards
+     * @param uniform whether rays are uniformly distributed
+     * @return the closest point on an alignment-line for current to goal to be located on without overlapping obstacles
      */
-    private Vector findClosest(Symbol current, Collection<Symbol> obstacles, double radi_step, Util.CandidateGoals cGoals) {
+    private Vector findClosest(Symbol current, Collection<Symbol> obstacles, Integer radi_count, Util.CandidateGoals cGoals, Boolean uniform) {
         Vector best = current.getCenter();
 
         List<Vector> goals = null;
@@ -102,7 +107,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         for (int i = 0; i < goals.size(); i++) {
             if (i % 2 == 1) continue; // we randomly sample which goals to optimize on
             Vector goal = goals.get(i);
-            Vector closest = findClosest(current, goal, obstacles, radi_step);
+            Vector closest = findClosest(current, goal, obstacles, radi_count, uniform);
             if (current.getRegion().distanceToRegion(closest) <= current.getRegion().distanceToRegion(best)) best = closest;
         }
 
@@ -117,15 +122,28 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * @param current the current symbol to be aligned
      * @param goal the goal to be aligned to
      * @param obstacles all symbols (is allowed to contain current, yet filtered out)
-     * @param radi_step 180/radi_step is the number of alignment-lines to consider
+     * @param radi_count the number of alignment-lines to consider
+     * @param uniform whether rays are uniformly distributed
      * @return the closest point on an alignment-line for current to goal to be located on without overlapping obstacles
      */
-    private Vector findClosest(Symbol current, Vector goal, Collection<Symbol> obstacles, double radi_step) {
-        Vector dir = Vector.subtract(goal, current.getCenter());
+    private Vector findClosest(Symbol current, Vector goal, Collection<Symbol> obstacles, Integer radi_count, Boolean uniform) {
+        Vector zerodir = Vector.subtract(goal, current.getCenter());
         Vector best = current.getCenter();
 
-        for (double deg = 0; deg < 180; deg += radi_step) {
-            Vector closest = findClosest(current, goal, Vector.rotate(dir, deg), obstacles);
+        List<Vector> directions = new ArrayList<>();
+        if (uniform) {
+            for (double deg = 0; deg < radi_count; deg += 180 / (double) radi_count) directions.add(Vector.rotate(zerodir, deg));
+        } else {
+            directions.add(zerodir);
+            for (double deg : this.degs) {
+                directions.add(Vector.rotate(zerodir, deg));
+                directions.add(Vector.rotate(zerodir, 180-deg));
+            }
+            directions.add(Vector.rotate(zerodir, 90));
+        }
+
+        for (Vector dir : directions) {
+            Vector closest = findClosest(current, goal, dir, obstacles);
             if (goal.distanceTo(closest) < goal.distanceTo(best) && current.getRegion().distanceToRegion(closest) <= current.getRegion().distanceToRegion(best)) best = closest;
         }
 

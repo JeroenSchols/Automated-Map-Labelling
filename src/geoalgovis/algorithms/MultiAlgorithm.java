@@ -42,7 +42,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
-        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
@@ -54,7 +54,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
-        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
@@ -75,7 +75,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         long startTime = System.nanoTime();
         Util.sortAroundPoint(output.symbols, Util.getAvgAnchor(output.symbols));
         Util.placeAway(output);
-        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor);
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();

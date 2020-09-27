@@ -18,7 +18,7 @@ class PostProcessAlgorithm {
      * @param output a output to be post-processed
      */
     void postprocess(Output output) {
-        this.postprocess(output,null,null,null,null, null, Util.CandidateGoals.Extrema);
+        this.postprocess(output,null,null,null,null, null, Util.CandidateGoals.Extrema, null);
     }
 
     /**
@@ -32,10 +32,11 @@ class PostProcessAlgorithm {
      * @param max_iter_pullback the maximum number of iterations to apply pullBack, terminates earlier when converged
      * @param min_delta_process the minimum relative change to consider until convergence of postprocessing is not reached
      * @param min_delta_pullback the minimum relative change to consider until convergence of pullback is not reached
-     * @param radi_step 180/radi_step is the number of alignment-lines to consider
+     * @param radi_count the number of alignment-lines to consider
      * @param cGoals which goals to try pulling towards using pullBack
+     * @param uniform whether rays are uniformly distributed
      */
-    void postprocess(Output output, Integer max_iter_process, Integer max_iter_pullback, Double min_delta_process, Double min_delta_pullback, Double radi_step, Util.CandidateGoals cGoals) {
+    void postprocess(Output output, Integer max_iter_process, Integer max_iter_pullback, Double min_delta_process, Double min_delta_pullback, Integer radi_count, Util.CandidateGoals cGoals, Boolean uniform) {
         if (max_iter_process == null) max_iter_process = 25;
         if (min_delta_process == null) min_delta_process = 0.0001;
 
@@ -45,8 +46,8 @@ class PostProcessAlgorithm {
         for (int iter = 0; iter < max_iter_process && (1+min_delta_process)*current_quality < prev_quality; iter++) {
             prev_quality = current_quality;
             output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
-            new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, 180.0, Util.CandidateGoals.Anchor);
-            new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, radi_step, cGoals);
+            new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, 1, Util.CandidateGoals.Anchor, true);
+            new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, radi_count, cGoals, uniform);
             new SwapAlgorithm().swap(output.symbols);
             current_quality = output.computeQuality();
             System.out.println("postprocessing iteration " + (iter + 1) + " = " + current_quality);
