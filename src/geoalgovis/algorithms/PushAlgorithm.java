@@ -28,6 +28,7 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
     void pushRun(Output output, Util.CandidateGoals cGoals) {
         double n_step = 100;
         for (double step = 0.0; step <= 5 * n_step && !output.isValid(); step++) {
+            Util.removeOverlappingCenters(output.symbols);
             HashMap<Symbol, Vector> transMap = new HashMap<>();
             for (Symbol current : output.symbols) {
                 if (current.distanceToRegion() == 0) {
