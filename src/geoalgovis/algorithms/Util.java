@@ -145,6 +145,13 @@ class Util {
         NorthWest
     }
 
+    enum MirrorDirection {
+        None,
+        X,
+        Y,
+        XY
+    }
+
     enum CandidateGoals {
         Anchor,
         Sample,
