@@ -134,6 +134,51 @@ class Util {
         return symbolsValuated;
     }
 
+    /**
+     * partition the symbol set into hor x ver boxes of even size
+     */
+    static ArrayList<Symbol>[][] partition(List<Symbol> symbols, int hor, int ver) {
+        ArrayList[][] partitions = new ArrayList[hor][ver];
+        for (int i = 0; i < hor; i++){
+            for (int j = 0; j < ver; j++) {
+                partitions[i][j] = new ArrayList<>();
+            }
+        }
+
+        double min_x = Float.MAX_VALUE;
+        double max_x = -Float.MAX_VALUE;
+        double min_y = Float.MAX_VALUE;
+        double max_y = -Float.MAX_VALUE;
+        for (Symbol s : symbols) {
+            min_x = Math.min(min_x, s.getCenter().getX());
+            max_x = Math.max(max_x, s.getCenter().getX());
+            min_y = Math.min(min_y, s.getCenter().getY());
+            max_y = Math.max(max_y, s.getCenter().getY());
+        }
+
+        double delta_x = (max_x - min_x) / hor;
+        double delta_y = (max_y - min_y) / ver;
+        System.out.println(delta_x + ", " + delta_y);
+
+        for (Symbol s : symbols) {
+            double x = s.getCenter().getX();
+            double y = s.getCenter().getY();
+            for (int i = 1; i <= hor; i++) {
+                if (x - min_x <= i * delta_x) {
+                    for (int j = 1; j <= ver; j++) {
+                        if (y - min_y <= j * delta_y) {
+                            partitions[i-1][j-1].add(s);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return partitions;
+    }
+
     enum RegionSortDirection {
         North,
         NorthEast,
