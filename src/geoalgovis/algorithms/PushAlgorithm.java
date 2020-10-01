@@ -45,7 +45,7 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
         if (startratio == null) startratio = 0d;
         if (endratio == null) endratio = 2d;
 
-        for (double step = startratio * n_step / 100d; step <= endratio * n_step && !output.isValid(); step++) {
+        for (double step = startratio * n_step; step < n_step || (step <= endratio * n_step && !output.isValid()); step++) {
             Util.removeOverlappingCenters(output.symbols);
             HashMap<Symbol, Vector> transMap = new HashMap<>();
             for (Symbol current : output.symbols) {
