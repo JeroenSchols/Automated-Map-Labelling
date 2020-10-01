@@ -47,7 +47,7 @@ class Util {
      * sort symbols on distance around a point
      */
     static void sortAroundPoint(List<Symbol> symbols, Vector point) {
-        symbols.sort((s1, s2) -> (int) (s1.getCenter().distanceTo(point) - s2.getCenter().distanceTo(point)));
+        symbols.sort(Comparator.comparingDouble(s -> s.getCenter().distanceTo(point)));
     }
 
     /**
