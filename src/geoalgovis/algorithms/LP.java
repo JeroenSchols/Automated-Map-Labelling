@@ -9,6 +9,7 @@ import gurobi.*;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -17,20 +18,32 @@ public class LP extends SymbolPlacementAlgorithm {
     @Override
     public Output doAlgorithm(Input input) {
         Output output = new Output(input);
-        lpSolve(output, Util.MirrorDirection.None);
-        System.out.println("lp done -- starting postprocessing");
+        this.partitionedLpSolve(output, true, 10, 10);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Anchor, 1000d, 0.9, 3d);
         new SwapAlgorithm().swap(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, 0.25, null);
         new PostProcessAlgorithm().postprocess(output);
         return output;
     }
 
-    void lpSolve(Output output) {
+    void partitionedLpSolve(Output output, Boolean orderAnchor, int hor, int ver) {
+        ArrayList<Symbol>[][] partition = Util.partition(output.symbols, hor, ver);
+        for (int i = 0; i < hor; i++) {
+            for (int j = 0; j < ver; j++) {
+                rectangleSolve(partition[i][j], orderAnchor);
+            }
+        }
+    }
+
+    void lpSolve(Output output, Boolean orderAnchor) {
+        if (orderAnchor == null) orderAnchor = true;
+
         double bestQuality = output.isValid() ? output.computeQuality() : Float.MAX_VALUE;
         HashMap<Symbol, Pair<Double, Double>> best = new HashMap<>();
         for (Symbol s : output.symbols) best.put(s, new Pair<>(s.getCenter().getX(), s.getCenter().getY()));
 
         for (Util.MirrorDirection dir : Util.MirrorDirection.values()) {
-            lpSolve(output, dir);
+            lpSolve(output, dir, orderAnchor);
             double quality = output.computeQuality();
             System.out.println(quality);
             if (quality < bestQuality) {
@@ -45,19 +58,14 @@ public class LP extends SymbolPlacementAlgorithm {
         }
     }
 
-    void lpSolve(Output output, Util.MirrorDirection dir) {
-        for (Symbol s : output.symbols) {
-            Vector anchor = s.getRegion().getAnchor();
-            if (dir == Util.MirrorDirection.X || dir == Util.MirrorDirection.XY) {
-                anchor.setX(-anchor.getX());
-            }
-            if (dir == Util.MirrorDirection.Y || dir == Util.MirrorDirection.XY) {
-                anchor.setY(-anchor.getY());
-            }
-        }
+    void lpSolve(Output output, Util.MirrorDirection dir, Boolean orderAnchor) {
+        if (orderAnchor == null) orderAnchor = true;
+        mirror(output, dir);
+        rectangleSolve(output.symbols, orderAnchor);
+        mirror(output, dir);
+    }
 
-        rectangleSolve(output.symbols);
-
+    private void mirror(Output output, Util.MirrorDirection dir) {
         for (Symbol s : output.symbols) {
             Vector anchor = s.getRegion().getAnchor();
             Vector center = s.getCenter();
@@ -72,7 +80,7 @@ public class LP extends SymbolPlacementAlgorithm {
         }
     }
 
-    private void rectangleSolve(List<Symbol> symbols) {
+    private void rectangleSolve(List<Symbol> symbols, boolean orderAnchor) {
         try {
             GRBEnv env = new GRBEnv();
             env.set(GRB.IntParam.LogToConsole, 0);
@@ -80,16 +88,17 @@ public class LP extends SymbolPlacementAlgorithm {
 
             HashMap<Symbol, Vector> anchor = new HashMap<>();
             HashMap<Symbol, Pair<GRBVar, GRBVar>> center = new HashMap<>();
-            HashMap<Symbol, GRBVar> centerDist = new HashMap<>();
+            GRBVar d = model.addVar(0, GRB.INFINITY, 2 * symbols.size(), GRB.CONTINUOUS, "d");
+
             for (Symbol s : symbols) {
                 anchor.put(s, s.getRegion().getAnchor());
 
                 GRBVar x = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_x");
                 GRBVar y = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_y");
-                GRBVar d = model.addVar(0, GRB.INFINITY, 1, GRB.CONTINUOUS, s.getRegion().getName() + "_d");
+                GRBVar dl = model.addVar(0, GRB.INFINITY, 1, GRB.CONTINUOUS, s.getRegion().getName() + "_d");
+                model.addConstr(dl, GRB.LESS_EQUAL, d, null);
 
                 center.put(s, new Pair<>(x, y));
-                centerDist.put(s, d);
 
                 int[] c = {-1, 1};
                 for (int xc : c) {
@@ -97,13 +106,17 @@ public class LP extends SymbolPlacementAlgorithm {
                         GRBLinExpr dist = new GRBLinExpr();
                         dist.addTerm(xc, x);
                         dist.addTerm(yc, y);
-                        dist.addTerm(1, d);
+                        dist.addTerm(1, dl);
                         model.addConstr(dist, GRB.GREATER_EQUAL, xc * anchor.get(s).getX() + yc * anchor.get(s).getY(), s.getRegion().getName() + "_dist");
                     }
                 }
             }
 
-            symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getX()));
+            if (orderAnchor) {
+                symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getX()));
+            } else {
+                symbols.sort(Comparator.comparingDouble(s -> s.getCenter().getX()));
+            }
             for (int i = 0; i < symbols.size() - 1; i++) {
                 Symbol s1 = symbols.get(i);
                 Symbol s2 = symbols.get(i + 1);
@@ -114,7 +127,11 @@ public class LP extends SymbolPlacementAlgorithm {
 
             }
 
-            symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getY()));
+            if (orderAnchor) {
+                symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getY()));
+            } else {
+                symbols.sort(Comparator.comparingDouble(s -> s.getCenter().getY()));
+            }
             for (int i = 0; i < symbols.size() - 1; i++) {
                 Symbol s1 = symbols.get(i);
                 Symbol s2 = symbols.get(i + 1);
@@ -129,7 +146,7 @@ public class LP extends SymbolPlacementAlgorithm {
                 for (Symbol s2 : symbols) {
                     if (s1 == s2) continue;
                     double dist = Math.sqrt(2 * (Math.pow(s1.getRadius() + s2.getRadius(), 2)));
-                    if (anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() <= anchor.get(s2).getY()) {
+                    if ((orderAnchor && anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() <= anchor.get(s2).getY()) || (!orderAnchor && s1.getCenter().getX() <= s2.getCenter().getX() && s1.getCenter().getY() <= s2.getCenter().getY())){
                         GRBLinExpr order = new GRBLinExpr();
                         order.addTerm(-1, center.get(s1).getFirst());
                         order.addTerm(-1, center.get(s1).getSecond());
@@ -137,7 +154,7 @@ public class LP extends SymbolPlacementAlgorithm {
                         order.addTerm(1, center.get(s2).getSecond());
                         model.addConstr(order, GRB.GREATER_EQUAL, dist, s1.getRegion().getName() + "-" + s2.getRegion().getName() + "_overlap");
                     }
-                    if (anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() >= anchor.get(s2).getY()) {
+                    if ((orderAnchor && anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() >= anchor.get(s2).getY()) || (!orderAnchor && s1.getCenter().getX() <= s2.getCenter().getX() && s1.getCenter().getY() >= s2.getCenter().getY())){
                         GRBLinExpr order = new GRBLinExpr();
                         order.addTerm(-1, center.get(s1).getFirst());
                         order.addTerm(1, center.get(s1).getSecond());
