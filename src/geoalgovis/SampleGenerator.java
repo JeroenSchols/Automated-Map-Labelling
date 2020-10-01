@@ -76,7 +76,7 @@ public class SampleGenerator {
             Ysum += Integer.parseInt(arrayPoints[(i*2)+1]);
         }
         
-        int radius = (int)Math.round(Math.random()*10);
+        int radius = (int)Math.round(Math.random()*25);
         int x = (int)Xsum/(arrayPoints.length /2);
         int y = (int)Ysum/(arrayPoints.length /2);
         return getAlphaNumericString(3)+"\t"+x+".0\t"+y+".0\t"+radius+"\t1";
