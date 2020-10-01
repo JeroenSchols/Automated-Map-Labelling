@@ -137,14 +137,7 @@ class Util {
     /**
      * partition the symbol set into hor x ver boxes of even size
      */
-    static ArrayList<Symbol>[][] partition(List<Symbol> symbols, int hor, int ver) {
-        ArrayList[][] partitions = new ArrayList[hor][ver];
-        for (int i = 0; i < hor; i++){
-            for (int j = 0; j < ver; j++) {
-                partitions[i][j] = new ArrayList<>();
-            }
-        }
-
+    static Pair<ArrayList<Symbol>, Pair<Pair<Double, Double>, Pair<Double, Double>>>[][] partition(List<Symbol> symbols, int hor, int ver) {
         double min_x = Float.MAX_VALUE;
         double max_x = -Float.MAX_VALUE;
         double min_y = Float.MAX_VALUE;
@@ -158,16 +151,26 @@ class Util {
 
         double delta_x = (max_x - min_x) / hor;
         double delta_y = (max_y - min_y) / ver;
-        System.out.println(delta_x + ", " + delta_y);
+
+        Pair<ArrayList<Symbol>, Pair<Pair<Double, Double>, Pair<Double, Double>>>[][] partitions = new Pair[hor][ver];
+        Pair[][] boundaries = new Pair[hor][ver];
+
+        for (int i = 0; i < hor; i++){
+            for (int j = 0; j < ver; j++) {
+                ArrayList<Symbol> partsymbols = new ArrayList<>();
+                Pair<Pair<Double, Double>, Pair<Double, Double>> range = new Pair<>(new Pair<>(min_x + i * delta_x, min_y + j * delta_y), new Pair<>(min_x + (i+1) * delta_x, min_y + (j+1) * delta_y));
+                partitions[i][j] = new Pair<>(partsymbols, range);
+            }
+        }
 
         for (Symbol s : symbols) {
-            double x = s.getCenter().getX();
-            double y = s.getCenter().getY();
+            double x = s.getRegion().getAnchor().getX();
+            double y = s.getRegion().getAnchor().getY();
             for (int i = 1; i <= hor; i++) {
                 if (x - min_x <= i * delta_x) {
                     for (int j = 1; j <= ver; j++) {
                         if (y - min_y <= j * delta_y) {
-                            partitions[i-1][j-1].add(s);
+                            partitions[i-1][j-1].getFirst().add(s);
                             break;
                         }
                     }
