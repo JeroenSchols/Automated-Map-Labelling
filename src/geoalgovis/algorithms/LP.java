@@ -15,26 +15,49 @@ import java.util.HashMap;
 import java.util.List;
 
 public class LP extends SymbolPlacementAlgorithm {
+
+    private GRBEnv env;
+
+    public LP () {
+        try {
+            this.env = new GRBEnv();
+            env.set(GRB.IntParam.LogToConsole, 0);
+        } catch (GRBException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public Output doAlgorithm(Input input) {
         Output output = new Output(input);
-        this.partitionedLpSolve(output, true, 10, 10);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Anchor, 1000d, 0.9, 3d);
-        new SwapAlgorithm().swap(output.symbols);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, 0.25, null);
-        new PostProcessAlgorithm().postprocess(output);
+        lpSolve(output, null);
         return output;
     }
 
+    /**
+     * solve as a linear program where the area is separated into hor x ver areas that are
+     * independently solved
+     *
+     * @param output the output to be run on
+     * @param orderAnchor whether ordering occurs on the anchor or the center points
+     * @param hor number of horizontal partitions
+     * @param ver number of vertical partitions
+     */
     void partitionedLpSolve(Output output, Boolean orderAnchor, int hor, int ver) {
-        ArrayList<Symbol>[][] partition = Util.partition(output.symbols, hor, ver);
+        Pair<ArrayList<Symbol>, Pair<Pair<Double, Double>, Pair<Double, Double>>>[][] partition = Util.partition(output.symbols, hor, ver);
         for (int i = 0; i < hor; i++) {
             for (int j = 0; j < ver; j++) {
-                rectangleSolve(partition[i][j], orderAnchor);
+                rectangleSolve(partition[i][j].getFirst(), orderAnchor, partition[i][j].getSecond(), 0, false);
             }
         }
     }
 
+    /**
+     * run the lp program for different mirroring orientations and take the best
+     *
+     * @param output the output to be run on
+     * @param orderAnchor whether ordering occurs on the anchor or the center points
+     */
     void lpSolve(Output output, Boolean orderAnchor) {
         if (orderAnchor == null) orderAnchor = true;
 
@@ -45,7 +68,6 @@ public class LP extends SymbolPlacementAlgorithm {
         for (Util.MirrorDirection dir : Util.MirrorDirection.values()) {
             lpSolve(output, dir, orderAnchor);
             double quality = output.computeQuality();
-            System.out.println(quality);
             if (quality < bestQuality) {
                 for (Symbol s : output.symbols) best.put(s, new Pair<>(s.getCenter().getX(), s.getCenter().getY()));
                 bestQuality = quality;
@@ -58,13 +80,26 @@ public class LP extends SymbolPlacementAlgorithm {
         }
     }
 
+    /**
+     * run the lp program for select mirroring orientation
+     *
+     * @param output the output to be run on
+     * @param dir which mirroring orientation
+     * @param orderAnchor whether ordering occurs on the anchor or the center points
+     */
     void lpSolve(Output output, Util.MirrorDirection dir, Boolean orderAnchor) {
         if (orderAnchor == null) orderAnchor = true;
         mirror(output, dir);
-        rectangleSolve(output.symbols, orderAnchor);
+        rectangleSolve(output.symbols, orderAnchor, null, 0, true);
         mirror(output, dir);
     }
 
+    /**
+     * mirrors the symbols their anchor and center point
+     *
+     * @param output the output which symbols should be mirrored
+     * @param dir the direction in which to mirror
+     */
     private void mirror(Output output, Util.MirrorDirection dir) {
         for (Symbol s : output.symbols) {
             Vector anchor = s.getRegion().getAnchor();
@@ -80,26 +115,44 @@ public class LP extends SymbolPlacementAlgorithm {
         }
     }
 
-    private void rectangleSolve(List<Symbol> symbols, boolean orderAnchor) {
+    /**
+     * run the linear program for rectangles as symbols
+     *
+     * @param symbols the symbols to be placed
+     * @param orderAnchor whether ordering occurs on the anchor or the center points
+     * @param box a bounding box in which all symbol centers need to be placed (can be null)
+     * @param margin the amount of slack is allowed to be used on the bounding box
+     * @param valid whether the symbols should be guaranteed non-overlapping
+     */
+    private void rectangleSolve(List<Symbol> symbols, boolean orderAnchor, Pair<Pair<Double, Double>, Pair<Double, Double>> box, double margin, boolean valid) {
         try {
-            GRBEnv env = new GRBEnv();
-            env.set(GRB.IntParam.LogToConsole, 0);
             GRBModel model = new GRBModel(env);
 
-            HashMap<Symbol, Vector> anchor = new HashMap<>();
-            HashMap<Symbol, Pair<GRBVar, GRBVar>> center = new HashMap<>();
+            HashMap<Symbol, Vector> anchor = new HashMap<>(); // stores for each symbol the anchor vector
+            HashMap<Symbol, Pair<GRBVar, GRBVar>> center = new HashMap<>(); // stores for each symbol the variable center <x, y>
+
+            // variable denoting the upper-bound on all distances between anchor and variable center
             GRBVar d = model.addVar(0, GRB.INFINITY, 2 * symbols.size(), GRB.CONTINUOUS, "d");
 
             for (Symbol s : symbols) {
                 anchor.put(s, s.getRegion().getAnchor());
 
-                GRBVar x = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_x");
-                GRBVar y = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_y");
-                GRBVar dl = model.addVar(0, GRB.INFINITY, 1, GRB.CONTINUOUS, s.getRegion().getName() + "_d");
-                model.addConstr(dl, GRB.LESS_EQUAL, d, null);
-
+                // create a variable x, y to correspond to the new center coordinates
+                GRBVar x, y;
+                if (box != null) {
+                    double dx = margin * box.getSecond().getFirst() - box.getFirst().getFirst();
+                    double dy = margin * box.getSecond().getSecond() - box.getFirst().getSecond();
+                    x = model.addVar(box.getFirst().getFirst() - dx, box.getSecond().getFirst() + dx, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_x");
+                    y = model.addVar(box.getFirst().getSecond() - dy, box.getSecond().getSecond() + dy, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_y");
+                } else {
+                    x = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_x");
+                    y = model.addVar(-GRB.INFINITY, GRB.INFINITY, 0, GRB.CONTINUOUS, s.getRegion().getName() + "_y");
+                }
                 center.put(s, new Pair<>(x, y));
 
+                // limit the distance between anchor and new center to be at most d
+                GRBVar dl = model.addVar(0, GRB.INFINITY, 1, GRB.CONTINUOUS, s.getRegion().getName() + "_d");
+                model.addConstr(dl, GRB.LESS_EQUAL, d, null);
                 int[] c = {-1, 1};
                 for (int xc : c) {
                     for (int yc : c) {
@@ -112,6 +165,7 @@ public class LP extends SymbolPlacementAlgorithm {
                 }
             }
 
+            // add the constraint that orthogonality in x is maintained
             if (orderAnchor) {
                 symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getX()));
             } else {
@@ -127,6 +181,7 @@ public class LP extends SymbolPlacementAlgorithm {
 
             }
 
+            // add the constraint that orthogonality in y is maintained
             if (orderAnchor) {
                 symbols.sort(Comparator.comparingDouble(s -> s.getRegion().getAnchor().getY()));
             } else {
@@ -142,10 +197,11 @@ public class LP extends SymbolPlacementAlgorithm {
 
             }
 
+            // add the non overlapping constraint
             for (Symbol s1 : symbols) {
                 for (Symbol s2 : symbols) {
                     if (s1 == s2) continue;
-                    double dist = Math.sqrt(2 * (Math.pow(s1.getRadius() + s2.getRadius(), 2)));
+                    double dist = valid ? Math.sqrt(2 * (Math.pow(s1.getRadius() + s2.getRadius(), 2))) : s1.getRadius() + s2.getRadius();
                     if ((orderAnchor && anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() <= anchor.get(s2).getY()) || (!orderAnchor && s1.getCenter().getX() <= s2.getCenter().getX() && s1.getCenter().getY() <= s2.getCenter().getY())){
                         GRBLinExpr order = new GRBLinExpr();
                         order.addTerm(-1, center.get(s1).getFirst());
@@ -167,14 +223,18 @@ public class LP extends SymbolPlacementAlgorithm {
 
             model.optimize();
 
-            for (Symbol s : symbols) {
-                double x = center.get(s).getFirst().get(GRB.DoubleAttr.X);
-                double y = center.get(s).getSecond().get(GRB.DoubleAttr.X);
-                s.setCenter(new Vector(x, y));
+            // when the model has found a solution get this solution, otherwise recurse with more slack
+            if (model.get(GRB.IntAttr.Status) == 2) {
+                for (Symbol s : symbols) {
+                    double x = center.get(s).getFirst().get(GRB.DoubleAttr.X);
+                    double y = center.get(s).getSecond().get(GRB.DoubleAttr.X);
+                    s.setCenter(new Vector(x, y));
+                }
+                model.dispose();
+            } else {
+                model.dispose();
+                rectangleSolve(symbols, orderAnchor, box, margin + 0.1, valid);
             }
-
-            model.dispose();
-            env.dispose();
 
         } catch (GRBException e) {
             e.printStackTrace();
