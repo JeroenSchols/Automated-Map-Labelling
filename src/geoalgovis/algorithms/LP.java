@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class LP extends SymbolPlacementAlgorithm {
+public class LP {
 
     private GRBEnv env;
 
@@ -25,13 +25,6 @@ public class LP extends SymbolPlacementAlgorithm {
         } catch (GRBException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public Output doAlgorithm(Input input) {
-        Output output = new Output(input);
-        lpSolve(output, null);
-        return output;
     }
 
     /**
