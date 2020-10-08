@@ -43,12 +43,29 @@ class SwapAlgorithm {
     }
 
     /**
-     * swaps all symbols when this layout remains valid and improves the score
+     * swap nodes that improve the score, however, without accounting for overlap
+     *
+     * @param symbols the symbols to be swapped
+     */
+    void swapInvalid(Collection<Symbol> symbols) {
+        this.swap(symbols, false);
+    }
+
+    /**
+     * swap nodes that improve the score and do not add new overlaps
      *
      * @param symbols the symbols to be swapped
      */
     void swap(Collection<Symbol> symbols) {
+        this.swap(symbols, true);
+    }
 
+    /**
+     * swaps all symbols and maintains validity when requested to
+     *
+     * @param symbols the symbols to be swapped
+     */
+    private void swap(Collection<Symbol> symbols, boolean valid) {
         // create a map[x,y] = r that denotes the maximum valid radius of a center at x,y
         HashMap<Symbol, Double> max_sizes = new HashMap<>();
         for (Symbol s1 : symbols) {
@@ -74,7 +91,7 @@ class SwapAlgorithm {
                 for (Symbol s2 : symbols) {
                     if (s1.hashCode() >= s2.hashCode()) continue;
                     double r2 = max_sizes.get(s2);
-                    if (r1 >= s2.getRadius() && r2 >= s1.getRadius() && distanceToRegion.get(s1).get(s1.getRegion()) + distanceToRegion.get(s2).get(s2.getRegion()) > distanceToRegion.get(s2).get(s1.getRegion()) + distanceToRegion.get(s1).get(s2.getRegion())) {
+                    if (((r1 >= s2.getRadius() && r2 >= s1.getRadius()) || !valid) && distanceToRegion.get(s1).get(s1.getRegion()) + distanceToRegion.get(s2).get(s2.getRegion()) > distanceToRegion.get(s2).get(s1.getRegion()) + distanceToRegion.get(s1).get(s2.getRegion())) {
                         // perform a swap and update the data structures
                         Vector c = s1.getCenter().clone();
                         HashMap<Region, Double> m = distanceToRegion.get(s1);

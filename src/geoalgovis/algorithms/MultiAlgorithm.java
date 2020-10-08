@@ -43,10 +43,9 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
-        long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "increasingRadi", endTime - startTime, postStartTime - startTime);
+        return new Result(output, "increasingRadi", endTime - startTime);
     }
 
     // place away all circles, use PullBack to place largest radius first
@@ -55,20 +54,18 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
-        long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "decreasingRadi", endTime - startTime, postStartTime - startTime);
+        return new Result(output, "decreasingRadi", endTime - startTime);
     }
 
     private Result centerAreaSpread(Output output) {
         long startTime = System.nanoTime();
         output = Util.placeAway(output);
         new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, null, null);
-        long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "centerAreaSpread", endTime - startTime, postStartTime - startTime);
+        return new Result(output, "centerAreaSpread", endTime - startTime);
     }
 
     private Result centralFirst(Output output) {
@@ -76,10 +73,9 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         Util.sortAroundPoint(output.symbols, Util.getAvgAnchor(output.symbols));
         Util.placeAway(output);
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
-        long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "centralFirst", endTime - startTime, postStartTime - startTime);
+        return new Result(output, "centralFirst", endTime - startTime);
     }
 
     private Result extremeCentralReplace(Output output) {
@@ -92,10 +88,9 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         }
         Util.removeOverlappingCenters(output.symbols);
         new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema);
-        long postStartTime = System.nanoTime();
         new PostProcessAlgorithm().postprocess(output);
         long endTime = System.nanoTime();
-        return new Result(output, "extremeCentralReplace", endTime - startTime, postStartTime - startTime);
+        return new Result(output, "extremeCentralReplace", endTime - startTime);
     }
 
 
@@ -104,15 +99,13 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         final Output output;
         final String algorithmName;
         final double duration;
-        final double postDuration;
         final boolean is_valid;
         final double score;
 
-        Result(Output output, String algorithmName, double duration, double postDuration) {
+        Result(Output output, String algorithmName, double duration) {
             this.output = output;
             this.algorithmName = algorithmName;
             this.duration = duration / 1000000000;
-            this.postDuration = postDuration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
             System.out.println(output.input.instanceName() + " finished running " + algorithmName);
@@ -120,10 +113,11 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
         @Override
         public String toString() {
+            String s = algorithmName + " on " + output.input.instanceName() + " took " + duration + " seconds and scored " + score;
             if (is_valid) {
-                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " of which " + postDuration + " was postprocessing and scored " + score + " (valid)";
+                return s + " (valid)";
             } else {
-                return output.input.instanceName() + " solved by " + algorithmName + " took " + duration + " of which " + postDuration + " was postprocessing and scored " + score + " (invalid)";
+                return s + " (invalid)";
             }
         }
 

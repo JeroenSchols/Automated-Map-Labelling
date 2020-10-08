@@ -47,7 +47,7 @@ class Util {
      * sort symbols on distance around a point
      */
     static void sortAroundPoint(List<Symbol> symbols, Vector point) {
-        symbols.sort((s1, s2) -> (int) (s1.getCenter().distanceTo(point) - s2.getCenter().distanceTo(point)));
+        symbols.sort(Comparator.comparingDouble(s -> s.getCenter().distanceTo(point)));
     }
 
     /**
@@ -134,6 +134,54 @@ class Util {
         return symbolsValuated;
     }
 
+    /**
+     * partition the symbol set into hor x ver boxes of even size
+     */
+    static Pair<ArrayList<Symbol>, Pair<Pair<Double, Double>, Pair<Double, Double>>>[][] partition(List<Symbol> symbols, int hor, int ver) {
+        double min_x = Float.MAX_VALUE;
+        double max_x = -Float.MAX_VALUE;
+        double min_y = Float.MAX_VALUE;
+        double max_y = -Float.MAX_VALUE;
+        for (Symbol s : symbols) {
+            min_x = Math.min(min_x, s.getCenter().getX());
+            max_x = Math.max(max_x, s.getCenter().getX());
+            min_y = Math.min(min_y, s.getCenter().getY());
+            max_y = Math.max(max_y, s.getCenter().getY());
+        }
+
+        double delta_x = (max_x - min_x) / hor;
+        double delta_y = (max_y - min_y) / ver;
+
+        Pair<ArrayList<Symbol>, Pair<Pair<Double, Double>, Pair<Double, Double>>>[][] partitions = new Pair[hor][ver];
+        Pair[][] boundaries = new Pair[hor][ver];
+
+        for (int i = 0; i < hor; i++){
+            for (int j = 0; j < ver; j++) {
+                ArrayList<Symbol> partsymbols = new ArrayList<>();
+                Pair<Pair<Double, Double>, Pair<Double, Double>> range = new Pair<>(new Pair<>(min_x + i * delta_x, min_y + j * delta_y), new Pair<>(min_x + (i+1) * delta_x, min_y + (j+1) * delta_y));
+                partitions[i][j] = new Pair<>(partsymbols, range);
+            }
+        }
+
+        for (Symbol s : symbols) {
+            double x = s.getRegion().getAnchor().getX();
+            double y = s.getRegion().getAnchor().getY();
+            for (int i = 1; i <= hor; i++) {
+                if (x - min_x <= i * delta_x) {
+                    for (int j = 1; j <= ver; j++) {
+                        if (y - min_y <= j * delta_y) {
+                            partitions[i-1][j-1].getFirst().add(s);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return partitions;
+    }
+
     enum RegionSortDirection {
         North,
         NorthEast,
@@ -143,6 +191,13 @@ class Util {
         SouthWest,
         West,
         NorthWest
+    }
+
+    enum MirrorDirection {
+        None,
+        X,
+        Y,
+        XY
     }
 
     enum CandidateGoals {
