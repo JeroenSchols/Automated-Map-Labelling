@@ -26,8 +26,26 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
      * @param cGoals which anchor points to pull towards
      */
     void pushRun(Output output, Util.CandidateGoals cGoals) {
-        double n_step = 100;
-        for (double step = 0.0; step <= 5 * n_step && !output.isValid(); step++) {
+        pushRun(output, cGoals, null, null, null);
+    }
+
+
+    /**
+     * uses a gravitational algorithm that pushes overlapping symbols away
+     * proportional to their squared distance to their respective regions
+     *
+     * @param output the output to be run on
+     * @param cGoals which anchor points to pull towards
+     * @param n_step the number of standard steps
+     * @param startratio the ratio of steps to skip at the start
+     * @param endratio the maximum ratio of steps until it must have converged
+     */
+    void pushRun(Output output, Util.CandidateGoals cGoals, Double n_step, Double startratio, Double endratio) {
+        if (n_step == null) n_step = 1000d;
+        if (startratio == null) startratio = 0d;
+        if (endratio == null) endratio = 2d;
+
+        for (double step = startratio * n_step; step < n_step || (step <= endratio * n_step && !output.isValid()); step++) {
             Util.removeOverlappingCenters(output.symbols);
             HashMap<Symbol, Vector> transMap = new HashMap<>();
             for (Symbol current : output.symbols) {
