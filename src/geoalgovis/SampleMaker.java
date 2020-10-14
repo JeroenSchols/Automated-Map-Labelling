@@ -5,6 +5,7 @@
  */
 package geoalgovis;
 
+import java.awt.Point;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,31 +16,29 @@ import java.util.ArrayList;
  * @author s159102
  */
 public class SampleMaker {
-        
-    String sampleFolder = "C:\\Project-Algorithms-for-geographic-data\\inputs\\generated\\";
-    int numberOfSamples = 50;            // Number of samples to generate
-    
-    int minNumberOfRegions = 50;         // Minimal number of regions to generate
-    int maxNumberOfRegions = 50;        // Maximum number of regions to generate
-    
-    int horizontalSpread = 2000;         // Larger number means less overlapping
-    int verticalSpread = 2000;           // Larger number means less overlapping
     
     int minNumberOfCornersRegion = 4;    // Minimal number of corners per region
     int maxNumberOfCornersRegion = 4;    // Maximum number of corners per region
     
-    int minSizeRegion = 100;              // Minimum region size
-    int maxSizeRegion = 700;             // Maximum region size
+    int spread;
     
-    int minRadiusCircle = 0;             // Minimum radius circles
-    int maxRadiusCircle = 100;           // Maximum radius circles
+    int minSizeRegion;             // Minimum region size
+    int maxSizeRegion;             // Maximum region size
+
+    int minRadiusCircle;             // Minimum radius circles
+    int maxRadiusCircle;           // Maximum radius circles
     
-    boolean allowOverlap = false;        // Allow overlapping regions
-    
+    boolean allowOverlap;
+
     ArrayList<int[]> filled;
     
-    public void createSamples(){
-        
+    public void createSamples(int numberOfSamples, int numberOfRegions, int spread, int minSizeRegion, int maxSizeRegion, int minRadiusCircle, int maxRadiusCircle, boolean allowOverlap, String sampleFolder){
+        this.spread = spread;
+        this.minSizeRegion = minSizeRegion;
+        this.maxSizeRegion = maxSizeRegion;
+        this.minRadiusCircle = minRadiusCircle;
+        this.maxRadiusCircle = maxRadiusCircle;
+        this.allowOverlap = allowOverlap;
         
         for (int i = 1; i <= numberOfSamples; i++) { 
             filled = new ArrayList();
@@ -56,7 +55,6 @@ public class SampleMaker {
 
                 // Create random sample
                 try (FileWriter writer = new FileWriter(sampleFolder+"generatedSample"+indexSample+".txt")) {
-                    int numberOfRegions = (int)Math.round(Math.random()*(maxNumberOfRegions-minNumberOfRegions))+minNumberOfRegions;
                     for (int j = 0; j < numberOfRegions; j++) {
                         String regionLine = randomRegionLine();
                         String circleLine = randomCircleLine(regionLine);
@@ -75,35 +73,37 @@ public class SampleMaker {
     private String randomRegionLine(){
         boolean overlap = true;
         String toReturn = "";
-        int timesToTry = 100;
+        int timesToTry = 10000;
         
-        int moveX = (int)Math.round(Math.random()*horizontalSpread);
-        int moveY = (int)Math.round(Math.random()*verticalSpread);
-        int x = 0;
-        int y = 0;
-        int xRange = 0;
-        int yRange = 0;
+        int moveX = (int)Math.round(Math.random()*spread);
+        int moveY = (int)Math.round(Math.random()*spread);
+        int xMax = 0;
+        int yMax = 0;
+        int xMin = 0;
+        int yMin = 0;
         
         while(overlap && timesToTry > 0){
-            moveX = (int)Math.round(Math.random()*horizontalSpread);
-            moveY = (int)Math.round(Math.random()*verticalSpread);
-            x = 0;
-            y = 0;
-            xRange = 0;
-            yRange = 0;
+            moveX = (int)Math.round(Math.random()*spread);
+            moveY = (int)Math.round(Math.random()*spread);
+            xMin = 999999;
+            yMin = 999999;
+            xMax = -999999;
+            yMax = -999999;
             toReturn = "";
             
             int numberOfPoints = (int)Math.round(Math.random()*(maxNumberOfCornersRegion-minNumberOfCornersRegion))+minNumberOfCornersRegion;
             for (int i = 0; i < numberOfPoints; i++) {
-                x = (int) ((int)Math.round((Math.random()*(maxSizeRegion-minSizeRegion))))+minSizeRegion+moveX;
-                y = (int) ((int)Math.round((Math.random()*(maxSizeRegion-minSizeRegion))))+minSizeRegion+moveY;
+                int x = (int) ((int)Math.round((Math.random()*(maxSizeRegion-minSizeRegion))))+minSizeRegion+moveX;
+                int y = (int) ((int)Math.round((Math.random()*(maxSizeRegion-minSizeRegion))))+minSizeRegion+moveY;
                 toReturn = toReturn + x + "\t" + y + "\t";
 
-                if (x>xRange){ xRange = x; }
-                if (y>yRange){ yRange = y; }
+                if (x>xMax){ xMax = x; }
+                if (y>yMax){ yMax = y; }
+                if (x<xMin){ xMin = x; }
+                if (y<yMin){ yMin = y; }
             }
             
-            if (!overlapping(x, xRange, y, yRange) || allowOverlap){
+            if (!overlapping(xMin, xMax, yMin, yMax) || allowOverlap){
                 overlap = false;
             } else {
                 timesToTry--;
@@ -114,22 +114,34 @@ public class SampleMaker {
             }
         }
 
-        filled.add(new int[]{moveX, xRange, moveY, yRange});
+        filled.add(new int[]{xMin, xMax, yMin, yMax});
 
         toReturn = toReturn.substring(0, toReturn.length() - 1);
         return toReturn;
     }
     
-    private boolean overlapping(int x, int xRange, int y, int yRange){
+    private boolean overlapping(int xMin, int xMax, int yMin, int yMax){
         for(int[] regio : filled){
-            if ((x >= regio[0] && x <= regio[1]) || (xRange >= regio[0] && xRange <= regio[1])){
-                if ((y >= regio[0] && y <= regio[3]) || (yRange >= regio[2] && yRange <= regio[3])){
-                    return true;
-                }
+            if (doOverlap(xMin, yMax, xMax, yMin, regio[0], regio[3], regio[1], regio[2])){
+                return true;
             }
         }
         return false;
     }
+    
+    boolean doOverlap(int l1x, int l1y, int r1x, int r1y, int l2x, int l2y, int r2x, int r2y) { 
+        // If one rectangle is on left side of other  
+        if (l1x >= r2x || l2x >= r1x) { 
+            return false; 
+        } 
+  
+        // If one rectangle is above other  
+        if (l1y <= r2y || l2y <= r1y) { 
+            return false; 
+        } 
+  
+        return true; 
+    } 
     
     // Creates random circle text line in the form: 'Label  xCenter yCenter radius 1'
     private String randomCircleLine(String regionLine){
