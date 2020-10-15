@@ -1,0 +1,8 @@
+NL06,pullBackIncreasingRadi,0.5124986,true,0.0
+NL06,pullBackDecreasingRadi,0.498796,true,0.0
+NL06,pullBackCentralFirst,0.3565237,true,0.0
+NL06,pullBackGreedyDirections,3.3375839,true,0.0
+NL06,centerAreaSpread,0.2325595,true,198.06536699402244
+NL06,pushAlgorithm,7.6916442,true,0.0
+NL06,lpPush,1.6415335,true,0.0
+NL06,lpCenterPush,1.8300045,true,0.0

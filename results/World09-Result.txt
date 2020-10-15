@@ -1,0 +1,8 @@
+World09,pullBackIncreasingRadi,7.6226293,true,1.184592355797442E7
+World09,pullBackDecreasingRadi,6.1336405,true,1.1994651550575603E7
+World09,pullBackCentralFirst,5.7155288,true,9932409.799532559
+World09,pullBackGreedyDirections,30.7836283,true,1.0957316938865043E7
+World09,centerAreaSpread,4.9489781,true,9896578.607714163
+World09,pushAlgorithm,222.3656951,true,9838406.77505896
+World09,lpPush,55.7329903,true,9891106.86805616
+World09,lpCenterPush,45.9594186,true,9964444.00267461
