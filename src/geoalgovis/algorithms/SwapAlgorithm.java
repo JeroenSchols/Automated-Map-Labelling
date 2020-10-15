@@ -10,6 +10,8 @@ import java.util.HashMap;
 
 class SwapAlgorithm {
 
+    private static final boolean __show_output__ = false;
+
     /**
      * swaps all symbols of equal size when this improves the score
      *
@@ -84,7 +86,9 @@ class SwapAlgorithm {
         }
 
         boolean improved;
+        int turn = 0;
         do {
+            turn++;
             improved = false;
             for (Symbol s1 : symbols) {
                 double r1 = max_sizes.get(s1);
@@ -106,6 +110,9 @@ class SwapAlgorithm {
                     }
                 }
             }
-        } while (improved);
+        } while (turn <= 10 && improved);
+
+        // indicate when this run did not converge properly
+        if (__show_output__ && turn > 10) System.err.println("swapAlgorithm did not converge");
     }
 }
