@@ -3,6 +3,7 @@ package geoalgovis.algorithms;
 import geoalgovis.symbolplacement.*;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
+import nl.tue.geometrycore.util.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -18,6 +19,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
         results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
         results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
+        results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
         results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
         results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
 
@@ -97,6 +99,34 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         new PostProcessAlgorithm().postprocess(output);
         return output;
+    }
+
+    // place away all circles, try for any direction which order gives the best pullback location
+    private Output pullBackGreedyDirections(Output output) {
+        Output bestOutput = output;
+        double bestQuality = Float.MAX_VALUE;
+
+        for (Util.RegionSortDirection dir : Util.RegionSortDirection.values()) {
+            Output newOutput = new Output(output.input);
+            List<Pair<Symbol, Vector>> oldAnchors = new ArrayList<>();
+            for (Symbol s : newOutput.symbols) oldAnchors.add(new Pair<>(s, s.getRegion().getAnchor()));
+            Util.placeAway(newOutput);
+            List<Pair<Symbol, Vector>> symbolsValuated = Util.sortRegionDir(newOutput.symbols, dir, null);
+            for (int i = 0; i < symbolsValuated.size(); i++) {
+                newOutput.symbols.set(i, symbolsValuated.get(i).getFirst());
+                symbolsValuated.get(i).getFirst().getRegion().setAnchor(symbolsValuated.get(i).getSecond());
+            }
+            new PullBackAlgorithm().pullBack(newOutput, 1, null, null, Util.CandidateGoals.Anchor, true);
+            for (Pair<Symbol, Vector> oldAnchor : oldAnchors) oldAnchor.getFirst().getRegion().setAnchor(oldAnchor.getSecond());
+            new PostProcessAlgorithm().postprocess(newOutput);
+            double quality = newOutput.computeQuality();
+            if (quality < bestQuality) {
+                bestQuality = quality;
+                bestOutput = newOutput;
+            }
+        }
+
+        return bestOutput;
     }
 
     // tries to place all symbols as close as possible to the center
