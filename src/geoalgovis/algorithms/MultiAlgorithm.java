@@ -5,6 +5,7 @@ import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
@@ -14,15 +15,11 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
 
         ArrayList<Result> results = new ArrayList<>();
-
-        boolean equalradi = true;
-        for (Region region : input.regions) if (region.getWeight() != input.regions.get(0).getWeight()) equalradi = false;
-
-        results.add(increasingRadi(new Output(input)));
-        if (!equalradi) results.add(decreasingRadi(new Output(input)));
-        results.add(centerAreaSpread(new Output(input)));
-        results.add(centralFirst(new Output(input)));
-        results.add(extremeCentralReplace(new Output(input)));
+        results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
+        results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
+        results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
+        results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
+        results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
 
         // sort output and return best
         Collections.sort(results);
@@ -37,60 +34,86 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         return results.get(0).output;
     }
 
+    private Result run(Function<Output, Output> method, Input input, String algorithmName) {
+        try {
+            long startTime = System.nanoTime();
+            Output output = new Output(input);
+            output = method.apply(output);
+            long endTime = System.nanoTime();
+            return new Result(output, algorithmName, endTime - startTime);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+//    // place away all circles, use PullBack to place smallest radius first
+//    private Result newRun(Output output) {
+//        long startTime = System.nanoTime();
+//
+//        new LP().partitionedLpSolve(output, true, 5, 5);
+//        new SwapAlgorithm().swapInvalid(output.symbols);
+//        new LP().partitionedLpSolve(output, true, 5, 5);
+//        new SwapAlgorithm().swapInvalid(output.symbols);
+//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+//        new SwapAlgorithm().swapInvalid(output.symbols);
+//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+//        new SwapAlgorithm().swapInvalid(output.symbols);
+//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+//        new SwapAlgorithm().swapInvalid(output.symbols);
+//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+//        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
+//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+//        new PostProcessAlgorithm().postprocess(output);
+//        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
+//        new PostProcessAlgorithm().postprocess(output);
+//
+//        long endTime = System.nanoTime();
+//        return new Result(output, "newRun", endTime - startTime);
+//    }
+
     // place away all circles, use PullBack to place smallest radius first
-    private Result increasingRadi(Output output) {
-        long startTime = System.nanoTime();
+    private Output pullBackIncreasingRadi(Output output) {
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(Circle::getRadius));
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         new PostProcessAlgorithm().postprocess(output);
-        long endTime = System.nanoTime();
-        return new Result(output, "increasingRadi", endTime - startTime);
+        return output;
     }
 
     // place away all circles, use PullBack to place largest radius first
-    private Result decreasingRadi(Output output) {
-        long startTime = System.nanoTime();
+    private Output pullBackDecreasingRadi(Output output) {
         output = Util.placeAway(output);
         output.symbols.sort(Comparator.comparingDouble(s -> -s.getRadius()));
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         new PostProcessAlgorithm().postprocess(output);
-        long endTime = System.nanoTime();
-        return new Result(output, "decreasingRadi", endTime - startTime);
+        return output;
     }
 
-    private Result centerAreaSpread(Output output) {
-        long startTime = System.nanoTime();
-        output = Util.placeAway(output);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, null, null);
-        new PostProcessAlgorithm().postprocess(output);
-        long endTime = System.nanoTime();
-        return new Result(output, "centerAreaSpread", endTime - startTime);
-    }
-
-    private Result centralFirst(Output output) {
-        long startTime = System.nanoTime();
+    // place away all circles, use Pullback to place the symbol closest to the average anchor point first
+    private Output pullBackCentralFirst(Output output) {
         Util.sortAroundPoint(output.symbols, Util.getAvgAnchor(output.symbols));
         Util.placeAway(output);
         new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         new PostProcessAlgorithm().postprocess(output);
-        long endTime = System.nanoTime();
-        return new Result(output, "centralFirst", endTime - startTime);
+        return output;
     }
 
-    private Result extremeCentralReplace(Output output) {
-        long startTime = System.nanoTime();
-        Vector center = Util.getAvgAnchor(output.symbols);
-        for (Symbol s : output.symbols) {
-            s.setCenter(center.clone());
-            Vector dir = s.vectorToRegion();
-            if (dir != null) s.getCenter().translate(dir);
-        }
-        Util.removeOverlappingCenters(output.symbols);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema);
+    // tries to place all symbols as close as possible to the center
+    private Output centerAreaSpread(Output output) {
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, null, null);
+        Vector avgAnchor = Util.getAvgAnchor(output.symbols);
+        output.symbols.sort(Comparator.comparingDouble(s -> s.getCenter().distanceTo(avgAnchor)));
+        new PullBackAlgorithm().pullBack(output, null, null, null, Util.CandidateGoals.Anchor, true);
         new PostProcessAlgorithm().postprocess(output);
-        long endTime = System.nanoTime();
-        return new Result(output, "extremeCentralReplace", endTime - startTime);
+        return output;
+    }
+
+    // performs the pushAlgorithm followed by postprocessing
+    private Output pushAlgorithm(Output output) {
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.All);
+        new PostProcessAlgorithm().postprocess(output);
+        return output;
     }
 
 

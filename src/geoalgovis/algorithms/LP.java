@@ -1,9 +1,7 @@
 package geoalgovis.algorithms;
 
-import geoalgovis.symbolplacement.Input;
 import geoalgovis.symbolplacement.Output;
 import geoalgovis.symbolplacement.Symbol;
-import geoalgovis.symbolplacement.SymbolPlacementAlgorithm;
 
 import gurobi.*;
 import nl.tue.geometrycore.geometry.Vector;
@@ -14,11 +12,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class LP {
+class LP {
 
     private GRBEnv env;
 
-    public LP () {
+    LP () {
         try {
             this.env = new GRBEnv();
             env.set(GRB.IntParam.LogToConsole, 0);

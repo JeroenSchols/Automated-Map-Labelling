@@ -7,16 +7,9 @@ import java.util.*;
 
 import static geoalgovis.algorithms.Util.calcOverlap;
 
-public class PushAlgorithm extends SymbolPlacementAlgorithm {
+class PushAlgorithm {
 
     private final Random random = new Random(0);
-
-    @Override
-    public Output doAlgorithm(Input input) {
-        Output output = new Output(input);
-        pushRun(output, Util.CandidateGoals.Anchor);
-        return output;
-    }
 
     /**
      * uses a gravitational algorithm that pushes overlapping symbols away
@@ -28,7 +21,6 @@ public class PushAlgorithm extends SymbolPlacementAlgorithm {
     void pushRun(Output output, Util.CandidateGoals cGoals) {
         pushRun(output, cGoals, null, null, null);
     }
-
 
     /**
      * uses a gravitational algorithm that pushes overlapping symbols away

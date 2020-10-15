@@ -7,6 +7,8 @@ import java.util.Comparator;
 
 class PostProcessAlgorithm {
 
+    private static final boolean __show_output__ = false;
+
     /**
      * performs all postprocessing algorithms until convergence
      * guarantees that a solution remains valid when the input is valid
@@ -42,19 +44,19 @@ class PostProcessAlgorithm {
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
-        System.out.println("postprocessing iteration 0 = " + current_quality);
+        if (__show_output__) System.out.println("postprocessing iteration 0 = " + current_quality);
         for (int iter = 0; iter < max_iter_process && (1+min_delta_process)*current_quality < prev_quality; iter++) {
             prev_quality = current_quality;
             output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
+            new SwapAlgorithm().swap(output.symbols);
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, 1, Util.CandidateGoals.Anchor, true);
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, radi_count, cGoals, uniform);
-            new SwapAlgorithm().swap(output.symbols);
             current_quality = output.computeQuality();
-            System.out.println("postprocessing iteration " + (iter + 1) + " = " + current_quality);
+            if (__show_output__) System.out.println("postprocessing iteration " + (iter + 1) + " = " + current_quality);
         }
 
         // indicate when this run did not converge properly
-        if ((1+min_delta_process)*current_quality < prev_quality) System.err.println(
+        if (__show_output__ && (1+min_delta_process)*current_quality < prev_quality) System.err.println(
                 "postprocess did not converge on " + output.getName() +
                         ", with max_iter = " + max_iter_process +
                         ", and min_delta = " + min_delta_process

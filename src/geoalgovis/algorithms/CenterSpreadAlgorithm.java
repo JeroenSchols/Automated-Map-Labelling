@@ -2,17 +2,14 @@ package geoalgovis.algorithms;
 
 import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
-import geoalgovis.symbolplacement.Input;
-import geoalgovis.symbolplacement.Output;
 import geoalgovis.symbolplacement.Symbol;
-import geoalgovis.symbolplacement.SymbolPlacementAlgorithm;
 import nl.tue.geometrycore.geometry.curved.Circle;
 import nl.tue.geometrycore.geometry.linear.HalfLine;
 import nl.tue.geometrycore.geometry.linear.Polygon;
 
 import java.util.*;
 
-public class CenterSpreadAlgorithm extends SymbolPlacementAlgorithm {
+class CenterSpreadAlgorithm {
 
     private Random random = new Random(0);
 
@@ -27,13 +24,6 @@ public class CenterSpreadAlgorithm extends SymbolPlacementAlgorithm {
      * Approach is intended to be used after a good yet somewhat overlapping alignment
      * is found.
      */
-
-    @Override
-    public Output doAlgorithm(Input input) {
-        Output output = new Output(input);
-        centerSpread(output.symbols, Util.getAvgCenter(output.symbols));
-        return output;
-    }
 
     /**
      * realigns all points multiple times around points in a central area

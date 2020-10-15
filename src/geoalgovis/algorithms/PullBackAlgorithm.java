@@ -5,15 +5,14 @@ import nl.tue.geometrycore.geometry.BaseGeometry;
 import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 import nl.tue.geometrycore.geometry.linear.*;
-import nl.tue.geometrycore.util.Pair;
 
 import java.util.*;
 
-public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
+class PullBackAlgorithm {
 
     private Random random = new Random(0);
-
-    private final double[] degs = new double[]{1, 2, 4, 8, 16, 32, 64};
+    private static final double[] degs = new double[]{1, 2, 4, 8, 16, 32, 64};
+    private static final boolean __show_output__ = false;
 
     /*
      * PullBack algorithm considers lines through the anchorpoint to place the symbol on
@@ -21,25 +20,6 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
      * In case there is a place where no interval is present, it considers placing the circle here
      * Of all lines, we place a symbol closest to its anchor
      */
-
-    @Override
-    public Output doAlgorithm(Input input) {
-        Output bestOutput = Util.placeAway(new Output(input));
-
-        for (Util.RegionSortDirection dir : Util.RegionSortDirection.values()) {
-            System.out.println("checking :" + dir.name());
-            Output output = Util.placeAway(new Output(input));
-            List<Pair<Symbol, Vector>> symbolsValuated = Util.sortRegionDir(output.symbols, dir, null);
-            for (int i = 0; i < symbolsValuated.size(); i++) {
-                output.symbols.set(i, symbolsValuated.get(i).getFirst());
-                symbolsValuated.get(i).getFirst().getRegion().setAnchor(symbolsValuated.get(i).getSecond());
-            }
-            pullBack(output, 1, null, null, null, null);
-            if (output.isValid() && output.computeQuality() < bestOutput.computeQuality()) bestOutput = output;
-        }
-
-        return bestOutput;
-    }
 
     /**
      * Apply the pullBack optimization max_iter times or until convergence is reached.
@@ -59,7 +39,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         if (min_delta == null) min_delta = 0.0001;
         if (radi_count == null) radi_count = 180;
         if (cGoals == null) cGoals = Util.CandidateGoals.All;
-        if (uniform == null) uniform = false;
+        if (uniform == null) uniform = true;
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
@@ -73,7 +53,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
         }
 
         // indicate when this run did not converge properly
-        if ((1+min_delta)*current_quality < prev_quality) System.err.println(
+        if (__show_output__ && (1+min_delta)*current_quality < prev_quality) System.err.println(
                 "pullBack did not converge on " + output.getName() +
                 ", with max_iter = " + max_iter +
                 ", and min_delta = " + min_delta
@@ -135,7 +115,7 @@ public class PullBackAlgorithm extends SymbolPlacementAlgorithm {
             for (double deg = 0; deg < radi_count; deg += 180 / (double) radi_count) directions.add(Vector.rotate(zerodir, deg));
         } else {
             directions.add(zerodir);
-            for (double deg : this.degs) {
+            for (double deg : degs) {
                 directions.add(Vector.rotate(zerodir, deg));
                 directions.add(Vector.rotate(zerodir, 180-deg));
             }
