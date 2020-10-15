@@ -25,6 +25,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
         results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
         results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
+//        results.add(run(this::lpPush, input, "lpPush")); // do not run this one yet. Contains bug
 
         if (__write_output__) {
             try {

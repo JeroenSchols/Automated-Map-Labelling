@@ -39,7 +39,7 @@ class PullBackAlgorithm {
         if (min_delta == null) min_delta = 0.0001;
         if (radi_count == null) radi_count = 180;
         if (cGoals == null) cGoals = Util.CandidateGoals.All;
-        if (uniform == null) uniform = true;
+        if (uniform == null) uniform = false;
 
         double current_quality = output.computeQuality();
         double prev_quality = 2*current_quality;
