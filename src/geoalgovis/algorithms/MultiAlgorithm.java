@@ -25,7 +25,8 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
         results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
         results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
-//        results.add(run(this::lpPush, input, "lpPush")); // do not run this one yet. Contains bug
+        results.add(run(this::lpPush, input, "lpPush"));
+        results.add(run(this::lpCenterPush, input, "lpCenterPush"));
 
         if (__write_output__) {
             try {
@@ -67,21 +68,35 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
     // place away all circles, use PullBack to place smallest radius first
     private Output lpPush(Output output) {
-        new LP().partitionedLpSolve(output, true, 5, 5);
+        int dif = (int)  Math.ceil(Math.sqrt(output.symbols.size() / 10));
+        new LP().partitionedLpSolve(output, true, dif, dif);
         new SwapAlgorithm().swapInvalid(output.symbols);
-        new LP().partitionedLpSolve(output, true, 5, 5);
+        new LP().partitionedLpSolve(output, true, dif, dif);
         new SwapAlgorithm().swapInvalid(output.symbols);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-        new SwapAlgorithm().swapInvalid(output.symbols);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-        new SwapAlgorithm().swapInvalid(output.symbols);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-        new SwapAlgorithm().swapInvalid(output.symbols);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
-        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new LP().partitionedLpSolve(output, true, dif, dif);
+        new SwapAlgorithm().swap(output.symbols);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.80, 2d);
         new PostProcessAlgorithm().postprocess(output);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
+        return output;
+    }
+
+    // place away all circles, use PullBack to place smallest radius first
+    private Output lpCenterPush(Output output) {
+        int dif = (int)  Math.ceil(Math.sqrt(output.symbols.size() / 10));
+        new LP().partitionedLpSolve(output, true, dif, dif);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new LP().partitionedLpSolve(output, true, dif, dif);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new LP().partitionedLpSolve(output, true, dif, dif);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 25);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 25);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 25);
+        new SwapAlgorithm().swap(output.symbols);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.80, 2d);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
         new PostProcessAlgorithm().postprocess(output);
         return output;
     }
