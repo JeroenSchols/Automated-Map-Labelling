@@ -5,12 +5,15 @@ import nl.tue.geometrycore.geometry.Vector;
 import nl.tue.geometrycore.geometry.curved.Circle;
 import nl.tue.geometrycore.util.Pair;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
 public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
     private static final boolean __show_output__ = true;
+    private static final boolean __write_output__ = true;
 
     @Override
     public Output doAlgorithm(Input input) {
@@ -22,6 +25,18 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
         results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
         results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
+
+        if (__write_output__) {
+            try {
+                FileWriter writer = new FileWriter("results/" + input.instanceName() + "-Result.txt");
+                for (Result result : results) {
+                    result.writeToFile(writer);
+                }
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         // sort output and return best
         Collections.sort(results);
@@ -49,30 +64,26 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         }
     }
 
-//    // place away all circles, use PullBack to place smallest radius first
-//    private Result newRun(Output output) {
-//        long startTime = System.nanoTime();
-//
-//        new LP().partitionedLpSolve(output, true, 5, 5);
-//        new SwapAlgorithm().swapInvalid(output.symbols);
-//        new LP().partitionedLpSolve(output, true, 5, 5);
-//        new SwapAlgorithm().swapInvalid(output.symbols);
-//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-//        new SwapAlgorithm().swapInvalid(output.symbols);
-//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-//        new SwapAlgorithm().swapInvalid(output.symbols);
-//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-//        new SwapAlgorithm().swapInvalid(output.symbols);
-//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-//        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
-//        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
-//        new PostProcessAlgorithm().postprocess(output);
-//        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
-//        new PostProcessAlgorithm().postprocess(output);
-//
-//        long endTime = System.nanoTime();
-//        return new Result(output, "newRun", endTime - startTime);
-//    }
+    // place away all circles, use PullBack to place smallest radius first
+    private Output lpPush(Output output) {
+        new LP().partitionedLpSolve(output, true, 5, 5);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new LP().partitionedLpSolve(output, true, 5, 5);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new SwapAlgorithm().swapInvalid(output.symbols);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
+        new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
+        new PostProcessAlgorithm().postprocess(output);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.66, 2d);
+        new PostProcessAlgorithm().postprocess(output);
+        return output;
+    }
 
     // place away all circles, use PullBack to place smallest radius first
     private Output pullBackIncreasingRadi(Output output) {
@@ -146,11 +157,11 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         return output;
     }
 
-
     private class Result implements Comparable<Result>{
 
         final Output output;
         final String algorithmName;
+        final String instanceName;
         final double duration;
         final boolean is_valid;
         final double score;
@@ -158,6 +169,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         Result(Output output, String algorithmName, double duration) {
             this.output = output;
             this.algorithmName = algorithmName;
+            this.instanceName = output.input.instanceName();
             this.duration = duration / 1000000000;
             this.is_valid = output.isValid();
             this.score = output.computeQuality();
@@ -166,12 +178,16 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
 
         @Override
         public String toString() {
-            String s = algorithmName + " on " + output.input.instanceName() + " took " + duration + " seconds and scored " + score;
+            String s = algorithmName + " on " + instanceName + " took " + duration + " seconds and scored " + score;
             if (is_valid) {
                 return s + " (valid)";
             } else {
                 return s + " (invalid)";
             }
+        }
+
+        void writeToFile(FileWriter writer) throws IOException {
+            writer.write(instanceName + "," + algorithmName + "," + duration + "," + is_valid + "," + score + "\n");
         }
 
         @Override
