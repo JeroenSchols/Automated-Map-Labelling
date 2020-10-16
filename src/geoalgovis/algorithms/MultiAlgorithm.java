@@ -75,7 +75,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         new SwapAlgorithm().swapInvalid(output.symbols);
         new LP().partitionedLpSolve(output, true, dif, dif);
         new SwapAlgorithm().swap(output.symbols);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.80, 2d);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 100d, 0.80, 2d);
         new PostProcessAlgorithm().postprocess(output);
         return output;
     }
@@ -95,7 +95,7 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         new SwapAlgorithm().swapInvalid(output.symbols);
         new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 25);
         new SwapAlgorithm().swap(output.symbols);
-        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 1000d, 0.80, 2d);
+        new PushAlgorithm().pushRun(output, Util.CandidateGoals.Extrema, 100d, 0.80, 2d);
         new CenterSpreadAlgorithm().centerAreaSpread(output.symbols, .33, 100);
         new PostProcessAlgorithm().postprocess(output);
         return output;
