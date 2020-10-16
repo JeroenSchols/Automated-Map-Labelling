@@ -1,0 +1,8 @@
+shards0013,pullBackIncreasingRadi,1.4087035,true,6.000312675752077E7
+shards0013,pullBackDecreasingRadi,1.6326036,true,5.98273173066816E7
+shards0013,pullBackCentralFirst,1.2456117,true,5.4044843000372805E7
+shards0013,pullBackGreedyDirections,5.1981779,true,6.027989269548889E7
+shards0013,centerAreaSpread,1.3359702,true,5.642450953288188E7
+shards0013,pushAlgorithm,6.5766112,true,5.9415995174751535E7
+shards0013,lpPush,2.9763473,true,6.232194333892379E7
+shards0013,lpCenterPush,2.8514423,true,5.8002843232689925E7
