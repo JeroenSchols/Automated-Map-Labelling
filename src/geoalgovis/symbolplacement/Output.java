@@ -114,6 +114,11 @@ public class Output extends Solution {
                 render.setStroke(Color.green, 2, Dashing.SOLID);
             } else {
                 render.setStroke(Color.blue, 2, Dashing.SOLID);
+                for (Symbol s2 : symbols) {
+                    if (s.getCenter().distanceTo(s2.getCenter()) < s.getRadius() + s2.getRadius() - 0.000001 && s != s2) {
+                        render.setStroke(Color.red, 2, Dashing.SOLID);
+                    }
+                }
             }
             Vector c = s.getCenter();
             render.draw(c, s.getRegion().getName());
