@@ -2,8 +2,12 @@ package geoalgovis.algorithms;
 
 import geoalgovis.symbolplacement.Output;
 import geoalgovis.symbolplacement.Symbol;
+import nl.tue.geometrycore.geometry.Vector;
+import nl.tue.geometrycore.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 class PostProcessAlgorithm {
 
@@ -48,9 +52,16 @@ class PostProcessAlgorithm {
         for (int iter = 0; iter < max_iter_process && (1+min_delta_process)*current_quality < prev_quality; iter++) {
             prev_quality = current_quality;
             output.symbols.sort(Comparator.comparingDouble(Symbol::distanceToRegion));
+            boolean preswapvalid = output.isValid();
+            List<Pair<Symbol, Vector>> old = new ArrayList<>();
+            if (preswapvalid) for (Symbol s : output.symbols) old.add(new Pair<>(s, s.getCenter().clone()));
             new SwapAlgorithm().swap(output.symbols);
+            boolean invalidated = preswapvalid && !output.isValid();
+            if (invalidated) for (Pair<Symbol, Vector> pair : old) pair.getFirst().setCenter(pair.getSecond());
+            if (invalidated && __show_output__) System.err.println("swapping invalidated " + output.getName());
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, 1, Util.CandidateGoals.Anchor, true);
             new PullBackAlgorithm().pullBack(output, max_iter_pullback, min_delta_pullback, radi_count, cGoals, uniform);
+            if (invalidated) new SwapAlgorithm().swap(output.symbols);
             current_quality = output.computeQuality();
             if (__show_output__) System.out.println("postprocessing iteration " + (iter + 1) + " = " + current_quality);
         }
