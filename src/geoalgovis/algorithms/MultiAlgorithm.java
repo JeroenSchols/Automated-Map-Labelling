@@ -19,14 +19,16 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
     public Output doAlgorithm(Input input) {
 
         ArrayList<Result> results = new ArrayList<>();
-        results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
-        results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
-        results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
-        results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
-        results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
-        results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
-        results.add(run(this::lpPush, input, "lpPush"));
-        results.add(run(this::lpCenterPush, input, "lpCenterPush"));
+
+// FOR THE CONTEST RUN THESE SEPERATELY (BY UNCOMMENTING A SINGLE LINE) IN GIVEN ORDER
+//        results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
+//        results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
+//        results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
+//        results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
+//        results.add(run(this::lpPush, input, "lpPush"));
+//        results.add(run(this::lpCenterPush, input, "lpCenterPush"));
+//        results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
+//        results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
 
         if (__write_output__) {
             try {
