@@ -41,7 +41,7 @@ public class CreateExlFile{
                 HSSFRow row = sheet.createRow((short)i);
                 row.createCell(0).setCellValue("generatedSample"+i);
                 try {
-                    reader = new BufferedReader(new FileReader("C:\\Users\\mart_\\Documents\\GitHub\\Project-Algorithms-for-geographic-data\\results\\Small spread & no overlap\\generatedSample"+i+"-Result.txt"));
+                    reader = new BufferedReader(new FileReader("C:\\Users\\mart_\\Documents\\GitHub\\Project-Algorithms-for-geographic-data\\results\\Large spread & no overlap\\generatedSample"+i+"-Result.txt"));
                     String line = reader.readLine();
                     float minTime = Float.POSITIVE_INFINITY;
                     float minScore = Float.POSITIVE_INFINITY;
@@ -95,7 +95,9 @@ public class CreateExlFile{
                             cell.setCellStyle(style);
                         }         
                     }
-                    row.getCell(indexMinScore).setCellStyle(style);
+                    if (option.equals("score")){ 
+                        row.getCell(indexMinScore).setCellStyle(style);
+                    }
                     
                 } catch (IOException e) {
                     e.printStackTrace();
