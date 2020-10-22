@@ -21,18 +21,18 @@ public class MultiAlgorithm extends SymbolPlacementAlgorithm {
         ArrayList<Result> results = new ArrayList<>();
 
 // FOR THE CONTEST RUN THESE SEPERATELY (BY UNCOMMENTING A SINGLE LINE) IN GIVEN ORDER
-//        results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
-//        results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
-//        results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
-//        results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
-//        results.add(run(this::lpPush, input, "lpPush"));
-//        results.add(run(this::lpCenterPush, input, "lpCenterPush"));
-//        results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
-//        results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
+        results.add(run(this::pullBackIncreasingRadi, input, "pullBackIncreasingRadi"));
+        results.add(run(this::pullBackCentralFirst, input, "pullBackCentralFirst"));
+        results.add(run(this::pushAlgorithm, input, "pushAlgorithm"));
+        results.add(run(this::centerAreaSpread, input, "centerAreaSpread"));
+        results.add(run(this::lpPush, input, "lpPush"));
+        results.add(run(this::lpCenterPush, input, "lpCenterPush"));
+        results.add(run(this::pullBackGreedyDirections, input, "pullBackGreedyDirections"));
+        results.add(run(this::pullBackDecreasingRadi, input, "pullBackDecreasingRadi"));
 
         if (__write_output__) {
             try {
-                FileWriter writer = new FileWriter("results/" + input.instanceName() + "-Result.txt");
+                FileWriter writer = new FileWriter("C:\\Users\\mart_\\Documents\\GitHub\\Project-Algorithms-for-geographic-data\\results\\" + input.instanceName() + "-Result.txt");
                 for (Result result : results) {
                     result.writeToFile(writer);
                 }

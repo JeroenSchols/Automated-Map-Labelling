@@ -1,0 +1,8 @@
+generatedSample97,pullBackIncreasingRadi,0.3862262,true,185959.54743054238
+generatedSample97,pullBackCentralFirst,0.7693402,true,161126.74055206525
+generatedSample97,pushAlgorithm,1.7204895,true,14868.18577211121
+generatedSample97,centerAreaSpread,0.5194425,true,223591.08859964335
+generatedSample97,lpPush,0.3163263,true,70233.68737166208
+generatedSample97,lpCenterPush,0.3879539,true,130634.19833593347
+generatedSample97,pullBackGreedyDirections,1.294482,true,69827.7593944558
+generatedSample97,pullBackDecreasingRadi,0.3211095,true,195401.46931919205

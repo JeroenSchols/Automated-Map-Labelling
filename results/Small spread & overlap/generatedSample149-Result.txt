@@ -1,0 +1,8 @@
+generatedSample149,pullBackIncreasingRadi,0.4643029,true,5.69585090005047E7
+generatedSample149,pullBackCentralFirst,0.2856131,true,5.343850870105545E7
+generatedSample149,pushAlgorithm,2.0382423,true,5.403102080124164E7
+generatedSample149,centerAreaSpread,0.5077182,true,5.562030246621188E7
+generatedSample149,lpPush,0.4215625,false,6.831361455979483E7
+generatedSample149,lpCenterPush,0.423728,true,5.73476497314653E7
+generatedSample149,pullBackGreedyDirections,1.536817,true,8.138160813036552E7
+generatedSample149,pullBackDecreasingRadi,0.3084137,true,9.050162020281594E7
