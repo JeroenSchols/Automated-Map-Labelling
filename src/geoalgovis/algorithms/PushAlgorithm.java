@@ -55,7 +55,7 @@ class PushAlgorithm {
                     if (randomAnchor.distanceTo(current.getCenter()) == 0) {
                         transMap.put(current, new Vector(0,0));
                     } else {
-                        transMap.put(current, Vector.multiply(Math.max(0.0, 1.0 - step / n_step), Vector.subtract(randomAnchor, current.getCenter())));
+                        transMap.put(current, Vector.multiply(Math.max(0.01, 1.0 - step / n_step), Vector.subtract(randomAnchor, current.getCenter())));
                     }
                 }
             }

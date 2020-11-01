@@ -201,7 +201,7 @@ class LP {
                         order.addTerm(1, center.get(s2).getSecond());
                         model.addConstr(order, GRB.GREATER_EQUAL, dist, s1.getRegion().getName() + "-" + s2.getRegion().getName() + "_overlap");
                     }
-                    if ((orderAnchor && anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() >= anchor.get(s2).getY()) || (!orderAnchor && s1.getCenter().getX() <= s2.getCenter().getX() && s1.getCenter().getY() >= s2.getCenter().getY())){
+                    if ((orderAnchor && anchor.get(s1).getX() <= anchor.get(s2).getX() && anchor.get(s1).getY() > anchor.get(s2).getY()) || (!orderAnchor && s1.getCenter().getX() <= s2.getCenter().getX() && s1.getCenter().getY() > s2.getCenter().getY())){
                         GRBLinExpr order = new GRBLinExpr();
                         order.addTerm(-1, center.get(s1).getFirst());
                         order.addTerm(1, center.get(s1).getSecond());
